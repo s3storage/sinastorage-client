@@ -91,8 +91,8 @@ def uploadquery( nation, accesskey, secretkey,
 
 def downloadquery( nation, accesskey, secretkey,
                    project, key,
-           expires = None,
-           metas = {},
+                   expires = None,
+                   metas = {},
                    **kwargs ) :
 
     et = type(expires)
@@ -129,7 +129,7 @@ def downloadquery( nation, accesskey, secretkey,
 
 def deletequery( nation, accesskey, secretkey,
                  project, key,
-		 metas = {},
+                 metas = {},
                  **kwargs ) :
 
     key = key.encode('utf-8')

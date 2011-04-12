@@ -91,8 +91,8 @@ def uploadquery( nation, accesskey, secretkey,
 
 def downloadquery( nation, accesskey, secretkey,
                    project, key,
-		   expires = None,
-		   metas = {},
+           expires = None,
+           metas = {},
                    **kwargs ) :
 
     et = type(expires)

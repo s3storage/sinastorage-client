@@ -40,7 +40,6 @@ int download_t(CURL *curlhandle, const char *hostname,const char *project,const 
     char* str1="?ssig=";
     char* str2="&Expires=";
     char* str3="&KID=";
-    char* str5="&debug=letmeseesee";
     char* str4="/";
     int i,j,k;
     time_t timer;
@@ -61,7 +60,14 @@ int download_t(CURL *curlhandle, const char *hostname,const char *project,const 
     {
         if(kid[i]!='0')
         {
-            tmpbuf1[i]=kid[i]-32;
+          if(kid[i]<'A'||kid[i]>'Z')  
+          {
+            tmpbuf1[i]=kid[i];       
+          } 
+          else
+          {
+            tmpbuf1[i]=kid[i]+32;
+          } 
         }
         else
             break;
@@ -77,7 +83,7 @@ int download_t(CURL *curlhandle, const char *hostname,const char *project,const 
         }
        else
         {
-          tmpbuf1[j+1]=kid[k]-32;
+          tmpbuf1[j+1]=kid[k]+32;
         }  
         j++;
     }
@@ -110,7 +116,7 @@ int download_t(CURL *curlhandle, const char *hostname,const char *project,const 
     strcat(urlbuf,expires);
     strcat(urlbuf,str3);
     strcat(urlbuf,tmpbuf1);
-    strcat(urlbuf,str5);
+    free(expires);
     free(ssig);
 
 
@@ -159,7 +165,6 @@ int upload_t(CURL *curlhandle, const char *hostname,const char *project,const ch
     char* str1="?ssig=";
     char* str2="&Expires=";
     char* str3="&KID=";
-    char* str5="&debug=letmeseesee";
     char* str4="/";
     int i,j,k;
     time_t timer;
@@ -180,7 +185,14 @@ int upload_t(CURL *curlhandle, const char *hostname,const char *project,const ch
     {
         if(kid[i]!='0')
         {
-            tmpbuf1[i]=kid[i]-32;
+          if(kid[i]<'A'||kid[i]>'Z')  
+          {
+            tmpbuf1[i]=kid[i];       
+          } 
+          else
+          {
+            tmpbuf1[i]=kid[i]+32;
+          } 
         }
         else
             break;
@@ -191,13 +203,13 @@ int upload_t(CURL *curlhandle, const char *hostname,const char *project,const ch
     for(k=strlen(kid)/2;k<strlen(kid);k++)
     {
        if(kid[k]<'A'||kid[k]>'Z')
-        {
-          tmpbuf1[j+1]=kid[k];
-        }
+       {
+         tmpbuf1[j+1]=kid[k];
+       }
        else
-        {
-          tmpbuf1[j+1]=kid[k]-32;
-        }  
+       {
+         tmpbuf1[j+1]=kid[k]+32;
+       }  
         j++;
     }
     tmpbuf1[j+1]='\0';
@@ -230,7 +242,7 @@ int upload_t(CURL *curlhandle, const char *hostname,const char *project,const ch
     strcat(urlbuf,expires);
     strcat(urlbuf,str3);
     strcat(urlbuf,tmpbuf1);
-    strcat(urlbuf,str5);
+    free(expires);
     free(ssig);
 
     if(NULL == (f=fopen(localpath,"r")))
@@ -271,7 +283,6 @@ char *urlencode(const char *s,int len)
     unsigned char hexchars[]="0123456789ABCDEF";
     char c;
 
-    printf("%s\n",s);
     from=s;
     end=s+len;
     start=to=(unsigned char*)malloc(3*len+1);

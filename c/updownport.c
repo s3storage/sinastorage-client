@@ -75,7 +75,16 @@ int download_t(CURL *curlhandle, const char *hostname,const char *project,const 
     tmpbuf1[i]=',';
     j=i;
 
-    for(k=strlen(kid)/2;k<strlen(kid);k++)
+    for(i=strlen(kid)/2;i<strlen(kid);i++)
+    {
+      if(kid[i]!='0')
+      break;   
+    }
+
+    //printf("%d\n",i);
+    //return 1;
+
+    for(k=i;k<strlen(kid);k++)
     {
        if(kid[k]<'A'||kid[k]>'Z')
         {
@@ -88,6 +97,8 @@ int download_t(CURL *curlhandle, const char *hostname,const char *project,const 
         j++;
     }
     tmpbuf1[j+1]='\0';
+    //printf("%s\n",tmpbuf1);
+    //return 1;   
 
     strcpy(stringtosignbuf,stringtosign);
     strcat(stringtosignbuf,expires);
@@ -118,7 +129,8 @@ int download_t(CURL *curlhandle, const char *hostname,const char *project,const 
     strcat(urlbuf,tmpbuf1);
     free(expires);
     free(ssig);
-
+    free(base64buf);
+    free(urlencodebuf);
 
     if(stat(localpath,&file_info)==0)
     {
@@ -200,7 +212,13 @@ int upload_t(CURL *curlhandle, const char *hostname,const char *project,const ch
     tmpbuf1[i]=',';
     j=i;
 
-    for(k=strlen(kid)/2;k<strlen(kid);k++)
+    for(i=strlen(kid)/2;i<strlen(kid);i++)
+    {
+       if(kid[i]!='0')
+       break;
+    }
+
+    for(k=i;k<strlen(kid);k++)
     {
        if(kid[k]<'A'||kid[k]>'Z')
        {
@@ -244,6 +262,8 @@ int upload_t(CURL *curlhandle, const char *hostname,const char *project,const ch
     strcat(urlbuf,tmpbuf1);
     free(expires);
     free(ssig);
+    free(base64buf);
+    free(urlencodebuf);
 
     if(NULL == (f=fopen(localpath,"r")))
         return -1;

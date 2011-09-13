@@ -12,7 +12,7 @@
 #include <malloc.h>
 #include <time.h>
 #include <unistd.h>
-#include "updownport.h"
+#include "sinastorage.h"
 
 char *base64(const unsigned char *input,int length);
 char *urlencode(const char *s,int len);
@@ -81,9 +81,6 @@ int download_t(CURL *curlhandle, const char *hostname,const char *project,const 
       break;   
     }
 
-    //printf("%d\n",i);
-    //return 1;
-
     for(k=i;k<strlen(kid);k++)
     {
        if(kid[k]<'A'||kid[k]>'Z')
@@ -96,9 +93,7 @@ int download_t(CURL *curlhandle, const char *hostname,const char *project,const 
         }  
         j++;
     }
-    tmpbuf1[j+1]='\0';
-    //printf("%s\n",tmpbuf1);
-    //return 1;   
+    tmpbuf1[j+1]='\0'; 
 
     strcpy(stringtosignbuf,stringtosign);
     strcat(stringtosignbuf,expires);
@@ -140,8 +135,8 @@ int download_t(CURL *curlhandle, const char *hostname,const char *project,const 
     f=fopen(localpath,"ab+");
     if(f==NULL)
     {
-        perror(NULL);
-        return 0;
+        printf("error03:%s,%s\n",localpath,error03);
+        return -1;
     }
 
     curl_easy_setopt(curlhandle,CURLOPT_URL,urlbuf);
@@ -149,15 +144,14 @@ int download_t(CURL *curlhandle, const char *hostname,const char *project,const 
     curl_easy_setopt(curlhandle,CURLOPT_WRITEDATA,f);
     curl_easy_setopt(curlhandle,CURLOPT_WRITEFUNCTION,writefunc);
 
-
     r=curl_easy_perform(curlhandle);
     fclose(f);
     if(r==CURLE_OK)
-        return 1;
+        return 0;
     else
     {
         fprintf(stderr, "%s\n", curl_easy_strerror(r));
-        return 0;
+        return -1;
     }
 }
 
@@ -266,13 +260,17 @@ int upload_t(CURL *curlhandle, const char *hostname,const char *project,const ch
     free(urlencodebuf);
 
     if(NULL == (f=fopen(localpath,"r")))
-        return -1;
+    {
+      printf("error03:%s,%s\n",localpath,error03);
+      return -1;
+    }
 
     fseek(f,0,SEEK_END);
     int sendSize = ftell(f);
     if(sendSize < 0)
     {
         fclose(f);
+        printf("error04:%s,%s",localpath,error04);
         return -1;
     }
 
@@ -287,11 +285,11 @@ int upload_t(CURL *curlhandle, const char *hostname,const char *project,const ch
     r=curl_easy_perform(curlhandle);
     fclose(f);
     if(r==CURLE_OK)
-        return 1;
+        return 0;
     else
     {
         fprintf(stderr, "%s\n", curl_easy_strerror(r));
-        return 0;
+        return -1;
     }
 
 }
@@ -329,35 +327,10 @@ char *urlencode(const char *s,int len)
     return (char*)start;
 }
 
-/*
-//unicode to utf-8
-int code_convert(char *from_charset,char *to_charset,char *inbuf,int inlen,char *outbuf,int outlen)
-{
-iconv_t cd;
-int rc;
-char **pin = &inbuf;
-char **pout = &outbuf;
-
-cd = iconv_open(to_charset,from_charset);
-if(cd == 0)
-return -1;
-memset(outbuf,0,outlen);
-
-if(iconv(cd,pin,&inlen,pout,&outlen) == -1)
-return -1;
-iconv_close(cd);
-return 0;
-}
-
-int u2g(char *inbuf,int inlen,char *outbuf,int outlen)
-{
-return code_convert("ucs-2","utf-8",inbuf,inlen,outbuf,outlen);
-}
- */
 char *base64(const unsigned char *input, int length)
 {
     BIO *bmem,*b64;
-    BUF_MEM	*bptr;
+    BUF_MEM *bptr;
 
     b64=BIO_new(BIO_f_base64());
     bmem=BIO_new(BIO_s_mem());
@@ -378,11 +351,28 @@ char *base64(const unsigned char *input, int length)
 int upload(const char *hostname,const char *project,const char *remotepath,const char *localpath,const char *kid,const char *secretkey)
 {
     int res;
+    CURLcode return_code;
     CURL *curlhandle=NULL;
-    curl_global_init(CURL_GLOBAL_ALL);
+    
+    return_code=curl_global_init(CURL_GLOBAL_ALL);
+    if(CURLE_OK!=return_code)
+           {
+      printf("error01:%s\n",error01);
+      return -1;
+           }
+    
     curlhandle=curl_easy_init();
-
+    if(NULL==curlhandle)
+           {
+      printf("error02:%s\n",error02);
+      return -1;
+           }
+    
     res=upload_t(curlhandle,hostname,project,remotepath,localpath,kid,secretkey);
+
+    curl_easy_cleanup(curlhandle);
+    curl_global_cleanup();
+
     if(res==-1)
         return -1;
     else
@@ -392,11 +382,28 @@ int upload(const char *hostname,const char *project,const char *remotepath,const
 int download(const char *hostname,const char *project,const char *remotepath,const char *localpath,const char *kid,const char *secretkey)
 {
     int res;
+    CURLcode return_code;
     CURL *curlhandle=NULL;
-    curl_global_init(CURL_GLOBAL_ALL);
+
+    return_code=curl_global_init(CURL_GLOBAL_ALL);
+    if(CURLE_OK!=return_code)
+    {
+      printf("error01:%s\n",error01);
+      return -1;
+    }
+
     curlhandle=curl_easy_init();
+    if(NULL==curlhandle)
+           {
+      printf("error02:%s\n",error02);
+      return -1;
+           }
 
     res=download_t(curlhandle,hostname,project,remotepath,localpath,kid,secretkey);
+    
+    curl_easy_cleanup(curlhandle);
+    curl_global_cleanup();
+
     if(res==-1)
         return -1;
     else

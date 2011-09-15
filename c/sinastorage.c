@@ -47,16 +47,11 @@ const char *localpath,const char *kid,const char *secretkey,int timeout)
     k=j+timeout;
     sprintf(expires,"%d",k);
 
-    strcpy(tmpbuf2,slash_str);
-    strcat(tmpbuf2,project);
-    strcat(tmpbuf2,remotepath);
+    sprintf(tmpbuf2,"%s%s%s",slash_str,project,remotepath);
 
     processkid(kid,tmpbuf1);          
 
-    strcpy(stringtosignbuf,stringtosign_get);
-    strcat(stringtosignbuf,expires);
-    strcat(stringtosignbuf,enter_str);
-    strcat(stringtosignbuf,tmpbuf2);
+    sprintf(stringtosignbuf,"%s%s%s%s",stringtosign_get,expires,enter_str,tmpbuf2);
 
     evp_md=EVP_sha1();
     HMAC(evp_md,secretkey,strlen(secretkey),stringtosignbuf,
@@ -71,15 +66,8 @@ const char *localpath,const char *kid,const char *secretkey,int timeout)
 
     urlencode(ssig,strlen(ssig),stringtosignbuf);    
 
-    strcpy(urlbuf,hostname);
-    strcat(urlbuf,tmpbuf2);
-
-    strcat(urlbuf,ssig_str);
-    strcat(urlbuf,stringtosignbuf);
-    strcat(urlbuf,expires_str);
-    strcat(urlbuf,expires);
-    strcat(urlbuf,kid_str);
-    strcat(urlbuf,tmpbuf1);
+    sprintf(urlbuf,"%s%s%s%s%s%s%s%s",hostname,tmpbuf2,ssig_str,stringtosignbuf,
+expires_str,expires,kid_str,tmpbuf1);
 
     if(stat(localpath,&file_info)==0)
     {
@@ -131,16 +119,11 @@ const char *localpath,const char *kid,const char *secretkey,int timeout)
     k=j+timeout;
     sprintf(expires,"%d",k);
 
-    strcpy(tmpbuf2,slash_str);
-    strcat(tmpbuf2,project);
-    strcat(tmpbuf2,remotepath);
+    sprintf(tmpbuf2,"%s%s%s",slash_str,project,remotepath);
 
     processkid(kid,tmpbuf1);
 
-    strcpy(stringtosignbuf,stringtosign_put);
-    strcat(stringtosignbuf,expires);
-    strcat(stringtosignbuf,enter_str);
-    strcat(stringtosignbuf,tmpbuf2);
+    sprintf(stringtosignbuf,"%s%s%s%s",stringtosign_put,expires,enter_str,tmpbuf2);
 
     evp_md=EVP_sha1();
     HMAC(evp_md,secretkey,strlen(secretkey),stringtosignbuf,
@@ -155,15 +138,8 @@ const char *localpath,const char *kid,const char *secretkey,int timeout)
 
     urlencode(ssig,strlen(ssig),stringtosignbuf);
 
-    strcpy(urlbuf,hostname);
-    strcat(urlbuf,tmpbuf2);
-
-    strcat(urlbuf,ssig_str);
-    strcat(urlbuf,stringtosignbuf);
-    strcat(urlbuf,expires_str);
-    strcat(urlbuf,expires);
-    strcat(urlbuf,kid_str);
-    strcat(urlbuf,tmpbuf1);
+    sprintf(urlbuf,"%s%s%s%s%s%s%s%s",hostname,tmpbuf2,ssig_str,stringtosignbuf,
+expires_str,expires,kid_str,tmpbuf1);
 
     if(NULL == (f=fopen(localpath,"r")))
     {

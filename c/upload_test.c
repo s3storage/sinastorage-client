@@ -8,7 +8,8 @@ int main(int c,char *argv[])
   char *localpath="/tmp/new1.c";
   char *kid="SYS0000000000SANDBOX";
   char *secretkey="1111111111111111111111111111111111111111";
+  int timeout=1800;
 
-  upload(hostname,project,remotepath,localpath,kid,secretkey);
+  upload(hostname,project,remotepath,localpath,kid,secretkey,timeout);
   return 0;
 }

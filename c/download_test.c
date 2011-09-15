@@ -9,8 +9,9 @@ int main(int c,char *argv[])
   char *localpath="/tmp/xp.c";
   char *kid="SYS0000001000SANDBOX";
   char *secretkey="1111111111111111111111111111111111111111";
+  int timeout=900;
 
-  download(hostname,project,remotepath,localpath,kid,secretkey);
+  download(hostname,project,remotepath,localpath,kid,secretkey,timeout);
   return 0;
 }
 

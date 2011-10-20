@@ -243,7 +243,6 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout)
     }
     ssig[10]='\0';
 
-    //urlencode(ssig,strlen(ssig),stringtosignbuf);
 
     sprintf(urlbuf,"%s%s%s",hostname,tmpbuf2,relax_str);
     sprintf(tmpbuf2,"%s%s%s",author_str,kidbuf,ssig);
@@ -447,9 +446,7 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout)
     sprintf(md,"%s",hexstr(tmpbuf3,20));
     sprintf(tmpbuf3,"%s%s",sha1_str,md);
     sprintf(stringtosignbuf,"%s%s%s%s%s%s%s%sfile is modified on %s%s%s%s",stringtosign_relax,
-    md,enter_str,enter_str,datebuf,zero_str,enter_str,/*expires_x_str,k,enter_str,*/info_x_str,datebuf,
-    enter_str,tmpbuf2,meta_str);
-    //printf("%s\n",stringtosignbuf);
+    md,enter_str,enter_str,datebuf,zero_str,enter_str,info_x_str,datebuf,enter_str,tmpbuf2,meta_str);
 
     evp_md=EVP_sha1();
     HMAC(evp_md,secretkey,strlen(secretkey),stringtosignbuf,
@@ -464,16 +461,13 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout)
     }
     ssig[10]='\0';
 
-    //urlencode(ssig,strlen(ssig),stringtosignbuf);
 
     sprintf(urlbuf,"%s%s%s%s",hostname,tmpbuf2,meta_str,str1);
     sprintf(tmpbuf2,"%s%s%s",author_str,kidbuf,ssig);
-    sprintf(tmpbuf1,"%s%d",expires_x_str,k);
     sprintf(stringtosignbuf,"%s file is modified on %s",info_x_str,datebuf);
     sprintf(md,"%s%s%s",date_str,datebuf,zero_str);
   
     headerlist=curl_slist_append(headerlist,tmpbuf3);
-    //headerlist=curl_slist_append(headerlist,tmpbuf1);
     headerlist=curl_slist_append(headerlist,stringtosignbuf);
     headerlist=curl_slist_append(headerlist,tmpbuf2);
     headerlist=curl_slist_append(headerlist,md);    
@@ -518,7 +512,7 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout)
     j=time(&timer);
     k=j+timeout;
     sprintf(expires,"%d",k);
-    strftime(datebuf,50,"%a, %d %b %Y %T",tm);
+    strftime(datebuf,50,"%a, %d %b %Y %T %Z",tm);
     sprintf(tmpbuf2,"%s%s%s",slash_str,project,remotepath);
 
     prockidauth(kid,kidbuf);
@@ -542,9 +536,8 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout)
 
     sprintf(md,"%s",hexstr(tmpbuf3,20));
     sprintf(tmpbuf3,"%s%s",sha1_str,md);
-    sprintf(stringtosignbuf,"%s%s%s%s%s%s%s%d%s%s%s",stringtosign_init,content_str,enter_str,
-    datebuf,zero_str,enter_str,expires_x_str,k,enter_str,tmpbuf2,upload_str);
-    //printf("%s\n",stringtosignbuf);
+    sprintf(stringtosignbuf,"%s%s%s%s%s%s%s",stringtosign_init,content_str,enter_str,
+    datebuf,enter_str,tmpbuf2,upload_str);
 
     evp_md=EVP_sha1();
     HMAC(evp_md,secretkey,strlen(secretkey),stringtosignbuf,
@@ -559,18 +552,14 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout)
     }
     ssig[10]='\0';
 
-    //urlencode(ssig,strlen(ssig),stringtosignbuf);
 
     sprintf(urlbuf,"%s%s%s%s",hostname,tmpbuf2,upload_str,str1);
     sprintf(tmpbuf2,"%s%s%s",author_str,kidbuf,ssig);
-    sprintf(tmpbuf1,"%s%d",expires_x_str,k);
-    //sprintf(stringtosignbuf,"%s file is modified on %s",info_x_str,datebuf);
-    sprintf(md,"%s%s%s",date_str,datebuf,zero_str);
+    sprintf(md,"%s%s",date_str,datebuf);
     sprintf(tmpbuf3,"%s%s",contenttype_str,content_str);  
     sprintf(stringtosignbuf,"%s",expect_str);
 
     headerlist=curl_slist_append(headerlist,tmpbuf3);
-    headerlist=curl_slist_append(headerlist,tmpbuf1);
     headerlist=curl_slist_append(headerlist,stringtosignbuf);
     headerlist=curl_slist_append(headerlist,tmpbuf2);
     headerlist=curl_slist_append(headerlist,md);    
@@ -578,10 +567,11 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout)
     curl_easy_setopt(curlhandle,CURLOPT_URL,urlbuf);
     curl_easy_setopt(curlhandle,CURLOPT_VERBOSE,1);
     curl_easy_setopt(curlhandle,CURLOPT_POST,1);
-    curl_easy_setopt(curlhandle,CURLOPT_INFILESIZE,0);
+    curl_easy_setopt(curlhandle,CURLOPT_POSTFIELDSIZE,0);
     curl_easy_setopt(curlhandle,CURLOPT_HTTPHEADER,headerlist);
 
     r=curl_easy_perform(curlhandle);
+    fclose(f);
     if(r==CURLE_OK)
         return 0;
     else
@@ -600,7 +590,7 @@ const char *sourcepath,const char *kid,const char *secretkey,const char *uploadi
     const EVP_MD *evp_md;
     unsigned int md_len;
     unsigned char md[1024*8];
-    char  stringtosignbuf[1024*8],tmpbuf1[50],tmpbuf3[80];
+    char  stringtosignbuf[1024*8],tmpbuf1[50],tmpbuf3[80],tmpbuf4[80];
     char  urlbuf[1024*8],tmpbuf2[1024*8],datebuf[50],kidbuf[50];
     char  expires[expires_len],ssig[ssig_len];
     int i,j,k,reslen;
@@ -616,12 +606,12 @@ const char *sourcepath,const char *kid,const char *secretkey,const char *uploadi
     j=time(&timer);
     k=j+timeout;
     sprintf(expires,"%d",k);
-    strftime(datebuf,50,"%a, %d %b %Y %T",tm);
+    strftime(datebuf,50,"%a, %d %b %Y %T %Z",tm);
     sprintf(tmpbuf2,"%s%s%s",slash_str,project,remotepath);
 
     prockidauth(kid,kidbuf);
 
-    if(NULL == (f=fopen(sourcepath,"r")))
+    if(NULL == (f=fopen(sourcepath,"rb")))
     {
       return -3;
     }
@@ -635,15 +625,14 @@ const char *sourcepath,const char *kid,const char *secretkey,const char *uploadi
     }
 
     fseek(f,0,SEEK_SET);
-    fread(stringtosignbuf,sendSize,1,f);
-    SHA1(stringtosignbuf,strlen(stringtosignbuf),tmpbuf3);
+    //fread(stringtosignbuf,sendSize,1,f);
+    //MD5(stringtosignbuf,strlen(stringtosignbuf),tmpbuf3);
+    //sprintf(md,"%s",hexstr(tmpbuf3,16));
+    //sprintf(tmpbuf4,"%s%s",md5_str,md);
+    sprintf(stringtosignbuf,"%s%s%s%s%s%s%s%s%s%d%s%s",stringtosign_relax,md,enter_str,content_str,
+    enter_str,datebuf,enter_str,tmpbuf2,partnum_str,partnum,uploadid_str,uploadid);
 
-    sprintf(md,"%s",hexstr(tmpbuf3,20));
-    sprintf(tmpbuf3,"%s%s",sha1_str,md);
-    sprintf(stringtosignbuf,"%s%s%s%s%s%d%s%s%s%d%s%s",stringtosign_put,datebuf,zero_str,enter_str,
-    expires_x_str,k,enter_str,tmpbuf2,partnum_str,partnum,uploadid_str,uploadid);
-    //printf("%s\n",stringtosignbuf);
-
+    
     evp_md=EVP_sha1();
     HMAC(evp_md,secretkey,strlen(secretkey),stringtosignbuf,
             strlen(stringtosignbuf),md,&md_len);
@@ -657,18 +646,16 @@ const char *sourcepath,const char *kid,const char *secretkey,const char *uploadi
     }
     ssig[10]='\0';
 
-    //urlencode(ssig,strlen(ssig),stringtosignbuf);
 
     sprintf(urlbuf,"%s%s%s%d%s%s%s",hostname,tmpbuf2,partnum_str,partnum,uploadid_str,
     uploadid,str1);
     sprintf(tmpbuf2,"%s%s%s",author_str,kidbuf,ssig);
-    sprintf(tmpbuf1,"%s%d",expires_x_str,k);
-    //sprintf(stringtosignbuf,"%s file is modified on %s",info_x_str,datebuf);
     sprintf(stringtosignbuf,"%s",expect_str);
-    sprintf(md,"%s%s%s",date_str,datebuf,zero_str);
-  
-    //headerlist=curl_slist_append(headerlist,tmpbuf3);
-    headerlist=curl_slist_append(headerlist,tmpbuf1);
+    sprintf(md,"%s%s",date_str,datebuf);
+    sprintf(tmpbuf3,"%s%s",contenttype_str,content_str);  
+
+    //headerlist=curl_slist_append(headerlist,tmpbuf4);
+    headerlist=curl_slist_append(headerlist,tmpbuf3);
     headerlist=curl_slist_append(headerlist,stringtosignbuf);
     headerlist=curl_slist_append(headerlist,tmpbuf2);
     headerlist=curl_slist_append(headerlist,md);    
@@ -681,6 +668,7 @@ const char *sourcepath,const char *kid,const char *secretkey,const char *uploadi
     curl_easy_setopt(curlhandle,CURLOPT_HTTPHEADER,headerlist);
 
     r=curl_easy_perform(curlhandle);
+    fclose(f);
     if(r==CURLE_OK)
         return 0;
     else
@@ -714,7 +702,7 @@ const char *sourcepath,const char *kid,const char *secretkey,const char *uploadi
     j=time(&timer);
     k=j+timeout;
     sprintf(expires,"%d",k);
-    strftime(datebuf,50,"%a, %d %b %Y %T",tm);
+    strftime(datebuf,50,"%a, %d %b %Y %T %Z",tm);
     sprintf(tmpbuf2,"%s%s%s",slash_str,project,remotepath);
 
     prockidauth(kid,kidbuf);
@@ -733,14 +721,13 @@ const char *sourcepath,const char *kid,const char *secretkey,const char *uploadi
     }
 
     fseek(f,0,SEEK_SET);
-    fread(stringtosignbuf,sendSize,1,f);
-    SHA1(stringtosignbuf,strlen(stringtosignbuf),tmpbuf3);
+    //fread(stringtosignbuf,sendSize,1,f);
+    //MD5(stringtosignbuf,strlen(stringtosignbuf),tmpbuf3);
 
-    sprintf(md,"%s",hexstr(tmpbuf3,20));
-    sprintf(tmpbuf3,"%s%s",sha1_str,md);
-    sprintf(stringtosignbuf,"%s%s%s%s%s%s%s%d%s%s%s%s",stringtosign_init,content_str,enter_str,
-    datebuf,zero_str,enter_str,expires_x_str,k,enter_str,tmpbuf2,uploadid_com_str,uploadid);
-    //printf("%s\n",stringtosignbuf);
+    //sprintf(md,"%s",hexstr(tmpbuf3,20));
+    //sprintf(tmpbuf3,"%s%s",sha1_str,md);
+    sprintf(stringtosignbuf,"%s%s%s%s%s%s%s%s",stringtosign_init,content_str,enter_str,
+    datebuf,enter_str,tmpbuf2,uploadid_com_str,uploadid);
 
     evp_md=EVP_sha1();
     HMAC(evp_md,secretkey,strlen(secretkey),stringtosignbuf,
@@ -755,25 +742,23 @@ const char *sourcepath,const char *kid,const char *secretkey,const char *uploadi
     }
     ssig[10]='\0';
 
-    //urlencode(ssig,strlen(ssig),stringtosignbuf);
 
     sprintf(urlbuf,"%s%s%s%s%s",hostname,tmpbuf2,uploadid_com_str,uploadid,str1);
     sprintf(tmpbuf2,"%s%s%s",author_str,kidbuf,ssig);
-    sprintf(tmpbuf1,"%s%d",expires_x_str,k);
-    //sprintf(stringtosignbuf,"%s file is modified on %s",info_x_str,datebuf);
     sprintf(stringtosignbuf,"%s",expect_str);    
-    sprintf(md,"%s%s%s",date_str,datebuf,zero_str);
+    sprintf(tmpbuf3,"%s%s",contenttype_str,content_str); 
+    sprintf(md,"%s%s",date_str,datebuf);
   
-    //headerlist=curl_slist_append(headerlist,tmpbuf3);
-    headerlist=curl_slist_append(headerlist,tmpbuf1);
+    headerlist=curl_slist_append(headerlist,tmpbuf3);
     headerlist=curl_slist_append(headerlist,stringtosignbuf);
     headerlist=curl_slist_append(headerlist,tmpbuf2);
     headerlist=curl_slist_append(headerlist,md);    
 
     curl_easy_setopt(curlhandle,CURLOPT_URL,urlbuf);
     curl_easy_setopt(curlhandle,CURLOPT_VERBOSE,1);
+    curl_easy_setopt(curlhandle,CURLOPT_READDATA,f);
     curl_easy_setopt(curlhandle,CURLOPT_POST,1);
-    curl_easy_setopt(curlhandle,CURLOPT_INFILESIZE,0);
+    curl_easy_setopt(curlhandle,CURLOPT_POSTFIELDSIZE,sendSize);
     curl_easy_setopt(curlhandle,CURLOPT_HTTPHEADER,headerlist);
 
     r=curl_easy_perform(curlhandle);
@@ -841,7 +826,7 @@ void prockidauth(const char *kid,char *result)
   {
      if(kid[i]!='0')
      {
-       if(kid[i]>'A'&&kid[i]<'Z')  
+       if((kid[i]>='A')&&(kid[i]<='Z'))  
        {
          result[i]=kid[i];       
        } 
@@ -938,8 +923,6 @@ static char *hexstr(unsigned char *buf,int len)
     static char str[80],*tmp;
     unsigned char *end;
     
-    if(len>20)
-    len=20;
     end=buf+len; 
     tmp=&str[0];
     while(buf<end)

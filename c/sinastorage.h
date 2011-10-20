@@ -13,6 +13,7 @@
 #define stringtosign_delete "DELETE\n\n\n"
 #define stringtosign_relax  "PUT\n"
 #define stringtosign_init   "POST\n\n"
+#define stringtosign_block  "POST\n"
 #define enter_str           "\n"
 #define ssig_str            "?ssig="
 #define ssig_after_str      "&ssig="
@@ -22,6 +23,7 @@
 #define source_str          "x-amz-copy-source:"
 #define copy_str            "?copy"
 #define sha1_str            "s-sina-sha1:"
+#define md5_str             "Content-MD5:"
 #define length_str          "s-sina-length:"
 #define relax_str           "?relax"
 #define author_str          "Authorization:"
@@ -36,8 +38,10 @@
 #define contenttype_str     "Content-Type:"
 #define partnum_str         "?partNumber="
 #define uploadid_str        "&uploadId="
+#define uploadid1_str       "&amp;uploadId="
 #define uploadid_com_str    "?uploadId="
 #define expect_str          "Expect:"
+#define test_str            "?ssig=9jFU2Hvt1i&Expires=1318839074&KID=sys,sandbox"
 
 #define expires_len 15
 #define ssig_len 11
@@ -67,5 +71,7 @@ int upload_block(const char *hostname,const char *project,const char *remotepath
 const char *sourcepath,const char *kid,const char *secretkey,const char *uploadid,
 int partnum,int timeout);
 
-int upload_complete(const char *hostname,const char *project,const char *remotepath,const char *sourcepath,const char *kid,const char *secretkey,const char *uploadid,int partnum,int timeout);
+int upload_complete(const char *hostname,const char *project,const char *remotepath,
+const char *sourcepath,const char *kid,const char *secretkey,const char *uploadid,
+int partnum,int timeout);
 #endif

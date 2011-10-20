@@ -625,13 +625,10 @@ const char *sourcepath,const char *kid,const char *secretkey,const char *uploadi
     }
 
     fseek(f,0,SEEK_SET);
-    //fread(stringtosignbuf,sendSize,1,f);
-    //MD5(stringtosignbuf,strlen(stringtosignbuf),tmpbuf3);
-    //sprintf(md,"%s",hexstr(tmpbuf3,16));
-    //sprintf(tmpbuf4,"%s%s",md5_str,md);
-    sprintf(stringtosignbuf,"%s%s%s%s%s%s%s%s%s%d%s%s",stringtosign_relax,md,enter_str,content_str,
-    enter_str,datebuf,enter_str,tmpbuf2,partnum_str,partnum,uploadid_str,uploadid);
 
+    sprintf(stringtosignbuf,"%s%s%s%s%s%s%s%s%d%s%s",stringtosign_relax,enter_str,content_str,
+    enter_str,datebuf,enter_str,tmpbuf2,partnum_str,partnum,uploadid_str,uploadid);
+    printf("%s\n",stringtosignbuf);
     
     evp_md=EVP_sha1();
     HMAC(evp_md,secretkey,strlen(secretkey),stringtosignbuf,
@@ -654,7 +651,6 @@ const char *sourcepath,const char *kid,const char *secretkey,const char *uploadi
     sprintf(md,"%s%s",date_str,datebuf);
     sprintf(tmpbuf3,"%s%s",contenttype_str,content_str);  
 
-    //headerlist=curl_slist_append(headerlist,tmpbuf4);
     headerlist=curl_slist_append(headerlist,tmpbuf3);
     headerlist=curl_slist_append(headerlist,stringtosignbuf);
     headerlist=curl_slist_append(headerlist,tmpbuf2);
@@ -721,11 +717,7 @@ const char *sourcepath,const char *kid,const char *secretkey,const char *uploadi
     }
 
     fseek(f,0,SEEK_SET);
-    //fread(stringtosignbuf,sendSize,1,f);
-    //MD5(stringtosignbuf,strlen(stringtosignbuf),tmpbuf3);
 
-    //sprintf(md,"%s",hexstr(tmpbuf3,20));
-    //sprintf(tmpbuf3,"%s%s",sha1_str,md);
     sprintf(stringtosignbuf,"%s%s%s%s%s%s%s%s",stringtosign_init,content_str,enter_str,
     datebuf,enter_str,tmpbuf2,uploadid_com_str,uploadid);
 

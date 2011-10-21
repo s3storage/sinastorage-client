@@ -33,7 +33,6 @@
 #define expires_x_str       "x-sina-expire:"
 #define info_x_str          "x-sina-info:"
 #define upload_str          "?uploads"
-//#define content_str         "application/x-www-form-urlencoded"
 #define content_str         "application/xml"
 #define contenttype_str     "Content-Type:"
 #define partnum_str         "?partNumber="
@@ -41,7 +40,6 @@
 #define uploadid1_str       "&amp;uploadId="
 #define uploadid_com_str    "?uploadId="
 #define expect_str          "Expect:"
-#define test_str            "?ssig=9jFU2Hvt1i&Expires=1318839074&KID=sys,sandbox"
 
 #define expires_len 15
 #define ssig_len 11

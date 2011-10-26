@@ -62,7 +62,7 @@ const char *localpath,const char *kid,const char *secretkey,int timeout)
             strlen(stringtosignbuf),md,&md_len);
     i=base64(md,md_len,stringtosignbuf,reslen);
     if(i!=0)
-    return -6;
+    return ERROR_BASE64_TOOLONG;
 
     for(i=5;i<15;i++)
     {
@@ -80,10 +80,10 @@ expires_str,expires,kid_str,tmpbuf1);
         local_file_len=file_info.st_size;
     }
 
-    f=fopen(localpath,"ab+");
+    f=fopen(localpath,"wb+");
     if(f==NULL)
     {
-        return -3;
+        return ERROR_OPEN_LOCALFILE;
     }
 
     curl_easy_setopt(curlhandle,CURLOPT_URL,urlbuf);
@@ -97,7 +97,7 @@ expires_str,expires,kid_str,tmpbuf1);
         return 0;
     else
     {
-        return -5;
+        return ERROR_CURL_PERFORM;
     }
 }
 
@@ -134,7 +134,7 @@ const char *localpath,const char *kid,const char *secretkey,int timeout)
             strlen(stringtosignbuf),md,&md_len);
     i=base64(md,md_len,stringtosignbuf,reslen);
     if(i!=0)
-    return -6;
+    return ERROR_BASE64_TOOLONG;
 
     for(i=5;i<15;i++)
     {
@@ -149,7 +149,7 @@ expires_str,expires,kid_str,tmpbuf1);
 
     if(NULL == (f=fopen(localpath,"r")))
     {
-      return -3;
+      return ERROR_OPEN_LOCALFILE;
     }
 
     fseek(f,0,SEEK_END);
@@ -157,7 +157,7 @@ expires_str,expires,kid_str,tmpbuf1);
     if(sendSize < 0)
     {
         fclose(f);
-        return -4;
+        return ERROR_LOCALFILE_EMPTY;
     }
 
     fseek(f,0,SEEK_SET);
@@ -174,7 +174,7 @@ expires_str,expires,kid_str,tmpbuf1);
         return 0;
     else
     {
-        return -5;
+        return ERROR_CURL_PERFORM;
     }
 
 }
@@ -196,8 +196,6 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout)
     struct tm *tm;
     reslen=1024*8;
 
-    //char *str1="&debug=letmeseesee";
-    //char *str2="da39a3ee5e6b4b0d3255bfef95601890afd80709";
 
     timer=time(NULL);
     //j=time(&timer);
@@ -210,7 +208,7 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout)
 
     if(NULL == (f=fopen(sourcepath,"r")))
     {
-      return -3;
+      return ERROR_OPEN_LOCALFILE;
     }
 
     fseek(f,0,SEEK_END);
@@ -218,7 +216,7 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout)
     if(sendSize < 0)
     {
         fclose(f);
-        return -4;
+        return ERROR_LOCALFILE_EMPTY;
     }
 
     fseek(f,0,SEEK_SET);
@@ -235,7 +233,7 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout)
             strlen(stringtosignbuf),md,&md_len);
     i=base64(md,md_len,stringtosignbuf,reslen);
     if(i!=0)
-    return -6;
+    return ERROR_BASE64_TOOLONG;
 
     for(i=5;i<15;i++)
     {
@@ -265,7 +263,7 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout)
         return 0;
     else
     {
-        return -5;
+        return ERROR_CURL_PERFORM;
     }
 }
 
@@ -302,7 +300,7 @@ const char *kid,const char *secretkey,int timeout)
             strlen(stringtosignbuf),md,&md_len);
     i=base64(md,md_len,stringtosignbuf,reslen);
     if(i!=0)
-    return -6;
+    return ERROR_BASE64_TOOLONG;
 
     for(i=5;i<15;i++)
     {
@@ -324,7 +322,7 @@ expires_str,expires,kid_str,tmpbuf1);
         return 0;
     else
     {
-        return -5;
+        return ERROR_CURL_PERFORM;
     }
 
 
@@ -365,7 +363,7 @@ enter_str,urlbuf,enter_str,tmpbuf2);
             strlen(stringtosignbuf),md,&md_len);
     i=base64(md,md_len,stringtosignbuf,reslen);
     if(i!=0)
-    return -6;
+    return ERROR_BASE64_TOOLONG;
 
     for(i=5;i<15;i++)
     {
@@ -392,7 +390,7 @@ expires_str,expires,kid_str,tmpbuf1);
         return 0;
     else
     {
-        return -5;
+        return ERROR_CURL_PERFORM;
     }
 }
 
@@ -414,8 +412,6 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout)
     struct tm *tm;
     reslen=1024*8;
 
-    char *str1="&debug=letmeseesee";
-
 
     timer=time(NULL);
     tm=localtime(&timer);
@@ -428,7 +424,7 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout)
 
     if(NULL == (f=fopen(sourcepath,"r")))
     {
-      return -3;
+      return ERROR_OPEN_LOCALFILE;
     }
 
     fseek(f,0,SEEK_END);
@@ -436,7 +432,7 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout)
     if(sendSize < 0)
     {
         fclose(f);
-        return -4;
+        return ERROR_LOCALFILE_EMPTY;
     }
 
     fseek(f,0,SEEK_SET);
@@ -453,7 +449,7 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout)
             strlen(stringtosignbuf),md,&md_len);
     i=base64(md,md_len,stringtosignbuf,reslen);
     if(i!=0)
-    return -6;
+    return ERROR_BASE64_TOOLONG;
 
     for(i=5;i<15;i++)
     {
@@ -462,7 +458,7 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout)
     ssig[10]='\0';
 
 
-    sprintf(urlbuf,"%s%s%s%s",hostname,tmpbuf2,meta_str,str1);
+    sprintf(urlbuf,"%s%s%s",hostname,tmpbuf2,meta_str);
     sprintf(tmpbuf2,"%s%s%s",author_str,kidbuf,ssig);
     sprintf(stringtosignbuf,"%s file is modified on %s",info_x_str,datebuf);
     sprintf(md,"%s%s%s",date_str,datebuf,zero_str);
@@ -483,12 +479,12 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout)
         return 0;
     else
     {
-        return -5;
+        return ERROR_CURL_PERFORM;
     }
 }
 
 int upload_init_t(CURL *curlhandle,const char *hostname,const char *project,const char *remotepath,
-const char *sourcepath,const char *kid,const char *secretkey,int timeout)
+const char *kid,const char *secretkey,char *uploadid,int timeout)
 {
     FILE *f;
     CURLcode r=CURLE_GOT_NOTHING;
@@ -504,8 +500,6 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout)
     struct tm *tm;
     reslen=1024*8;
 
-    char *str1="&debug=letmeseesee";
-
 
     timer=time(NULL);
     tm=localtime(&timer);
@@ -517,25 +511,10 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout)
 
     prockidauth(kid,kidbuf);
 
-    if(NULL == (f=fopen(sourcepath,"r")))
-    {
-      return -3;
-    }
+    f=fopen(uploadid_tmpfile,"wb+");
+    if(f==NULL)
+    return ERROR_OPEN_LOCALFILE;
 
-    fseek(f,0,SEEK_END);
-    int sendSize = ftell(f);
-    if(sendSize < 0)
-    {
-        fclose(f);
-        return -4;
-    }
-
-    fseek(f,0,SEEK_SET);
-    fread(stringtosignbuf,sendSize,1,f);
-    SHA1(stringtosignbuf,strlen(stringtosignbuf),tmpbuf3);
-
-    sprintf(md,"%s",hexstr(tmpbuf3,20));
-    sprintf(tmpbuf3,"%s%s",sha1_str,md);
     sprintf(stringtosignbuf,"%s%s%s%s%s%s%s",stringtosign_init,content_str,enter_str,
     datebuf,enter_str,tmpbuf2,upload_str);
 
@@ -544,7 +523,7 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout)
             strlen(stringtosignbuf),md,&md_len);
     i=base64(md,md_len,stringtosignbuf,reslen);
     if(i!=0)
-    return -6;
+    return ERROR_BASE64_TOOLONG;
 
     for(i=5;i<15;i++)
     {
@@ -553,7 +532,7 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout)
     ssig[10]='\0';
 
 
-    sprintf(urlbuf,"%s%s%s%s",hostname,tmpbuf2,upload_str,str1);
+    sprintf(urlbuf,"%s%s%s",hostname,tmpbuf2,upload_str);
     sprintf(tmpbuf2,"%s%s%s",author_str,kidbuf,ssig);
     sprintf(md,"%s%s",date_str,datebuf);
     sprintf(tmpbuf3,"%s%s",contenttype_str,content_str);  
@@ -569,15 +548,41 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout)
     curl_easy_setopt(curlhandle,CURLOPT_POST,1);
     curl_easy_setopt(curlhandle,CURLOPT_POSTFIELDSIZE,0);
     curl_easy_setopt(curlhandle,CURLOPT_HTTPHEADER,headerlist);
+    curl_easy_setopt(curlhandle,CURLOPT_WRITEFUNCTION,writefunc);
+    curl_easy_setopt(curlhandle,CURLOPT_WRITEDATA,f);
 
     r=curl_easy_perform(curlhandle);
-    fclose(f);
-    if(r==CURLE_OK)
-        return 0;
-    else
+    if(r!=CURLE_OK)
+        return ERROR_CURL_PERFORM;
+
+    fseek(f,0,SEEK_END);
+    int sendSize = ftell(f);
+    if(sendSize < 0)
     {
-        return -5;
+        fclose(f);
+        return ERROR_LOCALFILE_EMPTY;
     }
+
+    fseek(f,0,SEEK_SET);
+    fread(tmpbuf2,sendSize,1,f);
+    i=0;
+    while(i<sendSize)
+    {
+        if(tmpbuf2[i]=='U'&&tmpbuf2[i+1]=='p'&&tmpbuf2[i+2]=='l'&&tmpbuf2[i+3]=='o'&&tmpbuf2[i+4]=='a'
+           &&tmpbuf2[i+5]=='d'&&tmpbuf2[i+6]=='I'&&tmpbuf2[i+7]=='d')
+        break;
+        i++;
+    }
+    i+=9;
+    for(j=0;j<32;j++)
+    {
+        uploadid[j]=tmpbuf2[i];
+        i++;
+    }
+    uploadid[j+1]='\0';
+
+    fclose(f);
+    return 0;
 }
 
 
@@ -598,8 +603,6 @@ const char *sourcepath,const char *kid,const char *secretkey,const char *uploadi
     struct tm *tm;
     reslen=1024*8;
 
-    char *str1="&debug=letmeseesee";
-
 
     timer=time(NULL);
     tm=localtime(&timer);
@@ -613,7 +616,7 @@ const char *sourcepath,const char *kid,const char *secretkey,const char *uploadi
 
     if(NULL == (f=fopen(sourcepath,"rb")))
     {
-      return -3;
+      return ERROR_OPEN_LOCALFILE;
     }
 
     fseek(f,0,SEEK_END);
@@ -621,10 +624,11 @@ const char *sourcepath,const char *kid,const char *secretkey,const char *uploadi
     if(sendSize < 0)
     {
         fclose(f);
-        return -4;
+        return ERROR_LOCALFILE_EMPTY;
     }
 
     fseek(f,0,SEEK_SET);
+
 
     sprintf(stringtosignbuf,"%s%s%s%s%s%s%s%s%d%s%s",stringtosign_relax,enter_str,content_str,
     enter_str,datebuf,enter_str,tmpbuf2,partnum_str,partnum,uploadid_str,uploadid);
@@ -635,7 +639,7 @@ const char *sourcepath,const char *kid,const char *secretkey,const char *uploadi
             strlen(stringtosignbuf),md,&md_len);
     i=base64(md,md_len,stringtosignbuf,reslen);
     if(i!=0)
-    return -6;
+    return ERROR_BASE64_TOOLONG;
 
     for(i=5;i<15;i++)
     {
@@ -644,8 +648,8 @@ const char *sourcepath,const char *kid,const char *secretkey,const char *uploadi
     ssig[10]='\0';
 
 
-    sprintf(urlbuf,"%s%s%s%d%s%s%s",hostname,tmpbuf2,partnum_str,partnum,uploadid_str,
-    uploadid,str1);
+    sprintf(urlbuf,"%s%s%s%d%s%s",hostname,tmpbuf2,partnum_str,partnum,uploadid_str,
+    uploadid);
     sprintf(tmpbuf2,"%s%s%s",author_str,kidbuf,ssig);
     sprintf(stringtosignbuf,"%s",expect_str);
     sprintf(md,"%s%s",date_str,datebuf);
@@ -669,7 +673,7 @@ const char *sourcepath,const char *kid,const char *secretkey,const char *uploadi
         return 0;
     else
     {
-        return -5;
+        return ERROR_CURL_PERFORM;
     }
 }
 
@@ -690,7 +694,6 @@ const char *sourcepath,const char *kid,const char *secretkey,const char *uploadi
     struct tm *tm;
     reslen=1024*8;
 
-    char *str1="&debug=letmeseesee";
 
 
     timer=time(NULL);
@@ -705,7 +708,7 @@ const char *sourcepath,const char *kid,const char *secretkey,const char *uploadi
 
     if(NULL == (f=fopen(sourcepath,"r")))
     {
-      return -3;
+       return ERROR_OPEN_LOCALFILE;
     }
 
     fseek(f,0,SEEK_END);
@@ -713,7 +716,7 @@ const char *sourcepath,const char *kid,const char *secretkey,const char *uploadi
     if(sendSize < 0)
     {
         fclose(f);
-        return -4;
+        return ERROR_LOCALFILE_EMPTY;
     }
 
     fseek(f,0,SEEK_SET);
@@ -726,7 +729,7 @@ const char *sourcepath,const char *kid,const char *secretkey,const char *uploadi
             strlen(stringtosignbuf),md,&md_len);
     i=base64(md,md_len,stringtosignbuf,reslen);
     if(i!=0)
-    return -6;
+    return ERROR_BASE64_TOOLONG;
 
     for(i=5;i<15;i++)
     {
@@ -735,7 +738,7 @@ const char *sourcepath,const char *kid,const char *secretkey,const char *uploadi
     ssig[10]='\0';
 
 
-    sprintf(urlbuf,"%s%s%s%s%s",hostname,tmpbuf2,uploadid_com_str,uploadid,str1);
+    sprintf(urlbuf,"%s%s%s%s",hostname,tmpbuf2,uploadid_com_str,uploadid);
     sprintf(tmpbuf2,"%s%s%s",author_str,kidbuf,ssig);
     sprintf(stringtosignbuf,"%s",expect_str);    
     sprintf(tmpbuf3,"%s%s",contenttype_str,content_str); 
@@ -758,7 +761,7 @@ const char *sourcepath,const char *kid,const char *secretkey,const char *uploadi
         return 0;
     else
     {
-        return -5;
+        return ERROR_CURL_PERFORM;
     }
 }
 
@@ -900,7 +903,7 @@ int base64(const unsigned char *input, int length,char *result,int reslen)
     BIO_get_mem_ptr(b64,&bptr);
 
     if((bptr->length)>=reslen)
-    return -6;
+    return ERROR_BASE64_TOOLONG;
     memcpy(result,bptr->data,bptr->length-1);
     result[bptr->length-1]=0;
 
@@ -938,13 +941,13 @@ const char *kid,const char *secretkey,int timeout)
     return_code=curl_global_init(CURL_GLOBAL_ALL);
     if(CURLE_OK!=return_code)
     {
-      return -1;
+      return ERROR_CURL_INIT;
     }
     
     curlhandle=curl_easy_init();
     if(NULL==curlhandle)
     {
-      return -2;
+      return ERROR_CURL_GETHANDLE;
     }
     
     res=upload_t(curlhandle,hostname,project,remotepath,localpath,kid,secretkey,timeout);
@@ -968,13 +971,13 @@ const char *kid,const char *secretkey,int timeout)
     return_code=curl_global_init(CURL_GLOBAL_ALL);
     if(CURLE_OK!=return_code)
     {
-      return -1;
+      return ERROR_CURL_INIT;
     }
 
     curlhandle=curl_easy_init();
     if(NULL==curlhandle)
     {
-      return -2;
+      return ERROR_CURL_GETHANDLE;
     }
 
     res=upload_relax_t(curlhandle,hostname,project,remotepath,sourcepath,kid,secretkey,timeout);
@@ -998,13 +1001,13 @@ const char *kid,const char *secretkey,int timeout)
     return_code=curl_global_init(CURL_GLOBAL_ALL);
     if(CURLE_OK!=return_code)
     {
-      return -1;
+      return ERROR_CURL_INIT;
     }
 
     curlhandle=curl_easy_init();
     if(NULL==curlhandle)
     {
-      return -2;
+      return ERROR_CURL_GETHANDLE;
     }
 
     res=download_t(curlhandle,hostname,project,remotepath,localpath,kid,secretkey,timeout);
@@ -1028,13 +1031,13 @@ const char *kid,const char *secretkey,int timeout)
     return_code=curl_global_init(CURL_GLOBAL_ALL);
     if(CURLE_OK!=return_code)
     {
-      return -1;
+      return ERROR_CURL_INIT;
     }
 
     curlhandle=curl_easy_init();
     if(NULL==curlhandle)
     {
-      return -2;
+      return ERROR_CURL_GETHANDLE;
     }
 
     res=delete_t(curlhandle,hostname,project,remotepath,kid,secretkey,timeout);
@@ -1058,13 +1061,13 @@ const char *kid,const char *secretkey,int timeout)
     return_code=curl_global_init(CURL_GLOBAL_ALL);
     if(CURLE_OK!=return_code)
     {
-      return -1;
+      return ERROR_CURL_INIT;
     }
 
     curlhandle=curl_easy_init();
     if(NULL==curlhandle)
     {
-      return -2;
+      return ERROR_CURL_GETHANDLE;
     }
 
     res=copy_t(curlhandle,hostname,project,remotepath,sourcepath,kid,secretkey,timeout);
@@ -1088,13 +1091,13 @@ const char *kid,const char *secretkey,int timeout)
     return_code=curl_global_init(CURL_GLOBAL_ALL);
     if(CURLE_OK!=return_code)
     {
-      return -1;
+      return ERROR_CURL_INIT;
     }
 
     curlhandle=curl_easy_init();
     if(NULL==curlhandle)
     {
-      return -2;
+      return ERROR_CURL_GETHANDLE;
     }
 
     res=update_meta_t(curlhandle,hostname,project,remotepath,sourcepath,kid,secretkey,timeout);
@@ -1108,8 +1111,8 @@ const char *kid,const char *secretkey,int timeout)
         return 0;
 }
 
-int upload_init(const char *hostname,const char *project,const char *remotepath,const char *sourcepath,
-const char *kid,const char *secretkey,int timeout)
+int upload_init(const char *hostname,const char *project,const char *remotepath,
+const char *kid,const char *secretkey,char *uploadid, int timeout)
 {
     int res;
     CURLcode return_code;
@@ -1118,16 +1121,16 @@ const char *kid,const char *secretkey,int timeout)
     return_code=curl_global_init(CURL_GLOBAL_ALL);
     if(CURLE_OK!=return_code)
     {
-      return -1;
+      return ERROR_CURL_INIT;
     }
 
     curlhandle=curl_easy_init();
     if(NULL==curlhandle)
     {
-      return -2;
+      return ERROR_CURL_GETHANDLE;
     }
 
-    res=upload_init_t(curlhandle,hostname,project,remotepath,sourcepath,kid,secretkey,timeout);
+    res=upload_init_t(curlhandle,hostname,project,remotepath,kid,secretkey,uploadid,timeout);
     
     curl_easy_cleanup(curlhandle);
     curl_global_cleanup();
@@ -1148,13 +1151,13 @@ const char *kid,const char *secretkey,const char *uploadid,int partnum,int timeo
     return_code=curl_global_init(CURL_GLOBAL_ALL);
     if(CURLE_OK!=return_code)
     {
-      return -1;
+      return ERROR_CURL_INIT;
     }
 
     curlhandle=curl_easy_init();
     if(NULL==curlhandle)
     {
-      return -2;
+      return ERROR_CURL_GETHANDLE;
     }
 
     res=upload_block_t(curlhandle,hostname,project,remotepath,sourcepath,kid,secretkey,uploadid,partnum,timeout);
@@ -1178,13 +1181,13 @@ const char *kid,const char *secretkey,const char *uploadid,int partnum,int timeo
     return_code=curl_global_init(CURL_GLOBAL_ALL);
     if(CURLE_OK!=return_code)
     {
-      return -1;
+      return ERROR_CURL_INIT;
     }
 
     curlhandle=curl_easy_init();
     if(NULL==curlhandle)
     {
-      return -2;
+      return ERROR_CURL_GETHANDLE;
     }
 
     res=upload_complete_t(curlhandle,hostname,project,remotepath,sourcepath,kid,secretkey,uploadid,partnum,timeout);

@@ -1,12 +1,12 @@
 #ifndef _SINASTORAGE_H_
 #define _SINASTORAGE_H_
 
-//#define -1    "Init libcurl failed, please insure the libcurl is included."
-//#define -2    "Get an easy handle faild for libcurl."
-//#define -3    "Open the localpath's file failed, please check the file."
-//#define -4    "The file that you want to upload is empty, please check the file."
-//#define -5    "When execute curl_easy_preform() failed."
-//#define -6    "The strings are too long after base64() encoding."
+#define ERROR_CURL_INIT         (-1)
+#define ERROR_CURL_GETHANDLE    (-2)
+#define ERROR_OPEN_LOCALFILE    (-3)
+#define ERROR_LOCALFILE_EMPTY   (-4)
+#define ERROR_CURL_PERFORM      (-5)
+#define ERROR_BASE64_TOOLONG    (-6)
 
 #define stringtosign_get    "GET\n\n\n"
 #define stringtosign_put    "PUT\n\n\n"
@@ -40,6 +40,7 @@
 #define uploadid1_str       "&amp;uploadId="
 #define uploadid_com_str    "?uploadId="
 #define expect_str          "Expect:"
+#define uploadid_tmpfile    "uploadid.xml"
 
 #define expires_len 15
 #define ssig_len 11
@@ -63,7 +64,8 @@ int update_meta(const char *hostname,const char *project,const char *remotepath,
 const char *sourcepath,const char *kid,const char *secretkey,int timeout);
 
 int upload_init(const char *hostname,const char *project,const char *remotepath,
-const char *sourcepath,const char *kid,const char *secretkey,int timeout);
+const char *kid,const char *secretkey,char *uploadid,
+int timeout);
 
 int upload_block(const char *hostname,const char *project,const char *remotepath,
 const char *sourcepath,const char *kid,const char *secretkey,const char *uploadid,

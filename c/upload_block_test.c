@@ -11,8 +11,9 @@ int main(int c,char *argv[])
   char *uploadid="acb6511ecf7d4eaeb48a8da855c32cec";
   int partnum=1;
   int timeout=1800;
+  int connecttimeout=1;
 
   upload_block(hostname,project,remotepath,sourcepath,kid,secretkey,uploadid,
-  partnum,timeout);
+               partnum,timeout,connecttimeout);
   return 0;
 }

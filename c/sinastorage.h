@@ -43,32 +43,37 @@
 #define ssig_len 11
 
 int upload(const char *hostname,const char *project,const char *remotepath,
-const char *localpath,const char *kid,const char *secretkey,int timeout);
+const char *localpath,const char *kid,const char *secretkey,int timeout,
+int connecttimeout);
 
 int download(const char *hostname,const char *project,const char *remotepath,
-const char *localpath,const char *kid,const char *secretkey,int timeout);
+const char *localpath,const char *kid,const char *secretkey,int timeout,
+int connecttimeout);
 
 int delete(const char *hostname,const char *project,const char *remotepath,
-const char *kid,const char *secretkey,int timeout);
+const char *kid,const char *secretkey,int timeout,int connecttimeout);
 
 int copy(const char *hostname,const char *project,const char *remotepath,
-const char *sourcepath,const char *kid,const char *secretkey,int timeout);
+const char *sourcepath,const char *kid,const char *secretkey,int timeout,
+int connecttimeout);
 
 int upload_relax(const char *hostname,const char *project,const char *remotepath,
-const char *sourcepath,const char *kid,const char *secretkey,int timeout);
+const char *sourcepath,const char *kid,const char *secretkey,int timeout,
+int connecttimeout);
 
 int update_meta(const char *hostname,const char *project,const char *remotepath,
-const char *sourcepath,const char *kid,const char *secretkey,int timeout);
+const char *sourcepath,const char *kid,const char *secretkey,int timeout,
+int connecttimeout);
 
 int upload_init(const char *hostname,const char *project,const char *remotepath,
-const char *kid,const char *secretkey,char *uploadid,
-int timeout);
+const char *kid,const char *secretkey,char *uploadid,int timeout,
+int connecttimeout);
 
 int upload_block(const char *hostname,const char *project,const char *remotepath,
 const char *sourcepath,const char *kid,const char *secretkey,const char *uploadid,
-int partnum,int timeout);
+int partnum,int timeout,int connecttimeout);
 
 int upload_complete(const char *hostname,const char *project,const char *remotepath,
 const char *sourcepath,const char *kid,const char *secretkey,const char *uploadid,
-int partnum,int timeout);
+int partnum,int timeout,int connecttimeout);
 #endif

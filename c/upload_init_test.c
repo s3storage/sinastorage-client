@@ -9,7 +9,8 @@ int main(int c,char *argv[])
   char *secretkey="1111111111111111111111111111111111111111";
   char uploadid[50];
   int timeout=1800;
+  int connecttimeout=1;
 
-  upload_init(hostname,project,remotepath,kid,secretkey,uploadid,timeout);
+  upload_init(hostname,project,remotepath,kid,secretkey,uploadid,timeout,connecttimeout);
   return 0;
 }

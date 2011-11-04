@@ -11,8 +11,9 @@ int main(int c,char *argv[])
   char *uploadid="f3c8de9b51a44d83ac657b55f791f863";
   int partnum=2;
   int timeout=1800;
+  int connecttimeout=1;
 
   upload_complete(hostname,project,remotepath,sourcepath,kid,secretkey,uploadid,
-  partnum,timeout);
+                  partnum,timeout,connecttimeout);
   return 0;
 }

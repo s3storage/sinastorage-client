@@ -29,7 +29,7 @@ size_t writefunc(void *ptr,size_t size,size_t nmemb, void *stream)
 
 
 int download_t(CURL *curlhandle, const char *hostname,const char *project,const char *remotepath,
-const char *localpath,const char *kid,const char *secretkey,int timeout)
+const char *localpath,const char *kid,const char *secretkey,int timeout,int connecttimeout)
 {
     FILE *f;
     curl_off_t local_file_len=-1;
@@ -90,6 +90,7 @@ expires_str,expires,kid_str,kidbuf);
     curl_easy_setopt(curlhandle,CURLOPT_VERBOSE,1);
     curl_easy_setopt(curlhandle,CURLOPT_WRITEDATA,f);
     curl_easy_setopt(curlhandle,CURLOPT_WRITEFUNCTION,writefunc);
+    curl_easy_setopt(curlhandle,CURLOPT_CONNECTTIMEOUT,connecttimeout);
 
     r=curl_easy_perform(curlhandle);
     fclose(f);
@@ -103,7 +104,7 @@ expires_str,expires,kid_str,kidbuf);
 
 
 int upload_t(CURL *curlhandle, const char *hostname,const char *project,const char *remotepath,
-const char *localpath,const char *kid,const char *secretkey,int timeout)
+const char *localpath,const char *kid,const char *secretkey,int timeout,int connecttimeout)
 {
     FILE *f;
     CURLcode r=CURLE_GOT_NOTHING;
@@ -167,6 +168,7 @@ expires_str,expires,kid_str,kidbuf);
     curl_easy_setopt(curlhandle,CURLOPT_READDATA,f);
     curl_easy_setopt(curlhandle,CURLOPT_UPLOAD,1);
     curl_easy_setopt(curlhandle,CURLOPT_INFILESIZE,sendSize);
+    curl_easy_setopt(curlhandle,CURLOPT_CONNECTTIMEOUT,connecttimeout);
 
     r=curl_easy_perform(curlhandle);
     fclose(f);
@@ -180,7 +182,7 @@ expires_str,expires,kid_str,kidbuf);
 }
 
 int upload_relax_t(CURL *curlhandle,const char *hostname,const char *project,const char *remotepath,
-const char *sourcepath,const char *kid,const char *secretkey,int timeout)
+const char *sourcepath,const char *kid,const char *secretkey,int timeout,int connecttimeout)
 {
     FILE *f;
     CURLcode r=CURLE_GOT_NOTHING;
@@ -255,6 +257,8 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout)
     curl_easy_setopt(curlhandle,CURLOPT_UPLOAD,1);
     curl_easy_setopt(curlhandle,CURLOPT_INFILESIZE,0);
     curl_easy_setopt(curlhandle,CURLOPT_HTTPHEADER,headerlist);
+    curl_easy_setopt(curlhandle,CURLOPT_CONNECTTIMEOUT,connecttimeout);
+    curl_easy_setopt(curlhandle,CURLOPT_TIMEOUT,timeout);
 
     r=curl_easy_perform(curlhandle);
     if(r==CURLE_OK)
@@ -267,7 +271,7 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout)
 
 
 int delete_t(CURL *curlhandle,const char *hostname,const char *project,const char *remotepath,
-const char *kid,const char *secretkey,int timeout)
+const char *kid,const char *secretkey,int timeout,int connecttimeout)
 {
     CURLcode r=CURLE_GOT_NOTHING;
     const EVP_MD *evp_md;
@@ -313,6 +317,7 @@ expires_str,expires,kid_str,kidbuf);
     curl_easy_setopt(curlhandle,CURLOPT_URL,urlbuf);
     curl_easy_setopt(curlhandle,CURLOPT_VERBOSE,1);
     curl_easy_setopt(curlhandle,CURLOPT_CUSTOMREQUEST,"DELETE"); 
+    curl_easy_setopt(curlhandle,CURLOPT_CONNECTTIMEOUT,connecttimeout);
 
     r=curl_easy_perform(curlhandle);
     if(r==CURLE_OK)
@@ -326,7 +331,7 @@ expires_str,expires,kid_str,kidbuf);
 }
 
 int copy_t(CURL *curlhandle,const char *hostname,const char *project,const char *remotepath,
-const char *sourcepath,const char *kid,const char *secretkey,int timeout)
+const char *sourcepath,const char *kid,const char *secretkey,int timeout,int connecttimeout)
 {
     CURLcode r=CURLE_GOT_NOTHING;
     struct curl_slist *headerlist=NULL;
@@ -380,6 +385,7 @@ expires_str,expires,kid_str,kidbuf);
     curl_easy_setopt(curlhandle,CURLOPT_UPLOAD,1);
     curl_easy_setopt(curlhandle,CURLOPT_INFILESIZE,0);
     curl_easy_setopt(curlhandle,CURLOPT_HTTPHEADER,headerlist);
+    curl_easy_setopt(curlhandle,CURLOPT_CONNECTTIMEOUT,connecttimeout);
 
     r=curl_easy_perform(curlhandle);
     if(r==CURLE_OK)
@@ -392,7 +398,7 @@ expires_str,expires,kid_str,kidbuf);
 
 
 int update_meta_t(CURL *curlhandle,const char *hostname,const char *project,const char *remotepath,
-const char *sourcepath,const char *kid,const char *secretkey,int timeout)
+const char *sourcepath,const char *kid,const char *secretkey,int timeout,int connecttimeout)
 {
     FILE *f;
     CURLcode r=CURLE_GOT_NOTHING;
@@ -469,6 +475,8 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout)
     curl_easy_setopt(curlhandle,CURLOPT_UPLOAD,1);
     curl_easy_setopt(curlhandle,CURLOPT_INFILESIZE,0);
     curl_easy_setopt(curlhandle,CURLOPT_HTTPHEADER,headerlist);
+    curl_easy_setopt(curlhandle,CURLOPT_CONNECTTIMEOUT,connecttimeout);
+    curl_easy_setopt(curlhandle,CURLOPT_TIMEOUT,timeout);
 
     r=curl_easy_perform(curlhandle);
     if(r==CURLE_OK)
@@ -480,7 +488,7 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout)
 }
 
 int upload_init_t(CURL *curlhandle,const char *hostname,const char *project,const char *remotepath,
-const char *kid,const char *secretkey,char *uploadid,int timeout)
+const char *kid,const char *secretkey,char *uploadid,int timeout,int connecttimeout)
 {
     FILE *f;
     CURLcode r=CURLE_GOT_NOTHING;
@@ -543,6 +551,8 @@ const char *kid,const char *secretkey,char *uploadid,int timeout)
     curl_easy_setopt(curlhandle,CURLOPT_VERBOSE,1);
     curl_easy_setopt(curlhandle,CURLOPT_POST,1);
     curl_easy_setopt(curlhandle,CURLOPT_POSTFIELDSIZE,0);
+    curl_easy_setopt(curlhandle,CURLOPT_CONNECTTIMEOUT,connecttimeout);
+    curl_easy_setopt(curlhandle,CURLOPT_TIMEOUT,timeout);
     curl_easy_setopt(curlhandle,CURLOPT_HTTPHEADER,headerlist);
     curl_easy_setopt(curlhandle,CURLOPT_WRITEFUNCTION,writefunc);
     curl_easy_setopt(curlhandle,CURLOPT_WRITEDATA,f);
@@ -583,7 +593,8 @@ const char *kid,const char *secretkey,char *uploadid,int timeout)
 
 
 int upload_block_t(CURL *curlhandle, const char *hostname,const char *project,const char *remotepath,
-const char *sourcepath,const char *kid,const char *secretkey,const char *uploadid,int partnum,int timeout)
+const char *sourcepath,const char *kid,const char *secretkey,const char *uploadid,int partnum,
+int timeout,int connecttimeout)
 {
     FILE *f;
     CURLcode r=CURLE_GOT_NOTHING;
@@ -661,6 +672,8 @@ const char *sourcepath,const char *kid,const char *secretkey,const char *uploadi
     curl_easy_setopt(curlhandle,CURLOPT_READDATA,f);
     curl_easy_setopt(curlhandle,CURLOPT_UPLOAD,1);
     curl_easy_setopt(curlhandle,CURLOPT_INFILESIZE,sendSize);
+    curl_easy_setopt(curlhandle,CURLOPT_CONNECTTIMEOUT,connecttimeout);
+    curl_easy_setopt(curlhandle,CURLOPT_TIMEOUT,timeout);
     curl_easy_setopt(curlhandle,CURLOPT_HTTPHEADER,headerlist);
 
     r=curl_easy_perform(curlhandle);
@@ -674,7 +687,8 @@ const char *sourcepath,const char *kid,const char *secretkey,const char *uploadi
 }
 
 int upload_complete_t(CURL *curlhandle, const char *hostname,const char *project,const char *remotepath,
-const char *sourcepath,const char *kid,const char *secretkey,const char *uploadid,int partnum,int timeout)
+const char *sourcepath,const char *kid,const char *secretkey,const char *uploadid,int partnum,int timeout,
+int connecttimeout)
 {
     FILE *f;
     CURLcode r=CURLE_GOT_NOTHING;
@@ -750,6 +764,8 @@ const char *sourcepath,const char *kid,const char *secretkey,const char *uploadi
     curl_easy_setopt(curlhandle,CURLOPT_READDATA,f);
     curl_easy_setopt(curlhandle,CURLOPT_POST,1);
     curl_easy_setopt(curlhandle,CURLOPT_POSTFIELDSIZE,sendSize);
+    curl_easy_setopt(curlhandle,CURLOPT_CONNECTTIMEOUT,connecttimeout);
+    curl_easy_setopt(curlhandle,CURLOPT_TIMEOUT,timeout);
     curl_easy_setopt(curlhandle,CURLOPT_HTTPHEADER,headerlist);
 
     r=curl_easy_perform(curlhandle);
@@ -927,7 +943,7 @@ static char *hexstr(unsigned char *buf,int len)
 }
 
 int upload(const char *hostname,const char *project,const char *remotepath,const char *localpath,
-const char *kid,const char *secretkey,int timeout)
+const char *kid,const char *secretkey,int timeout,int connecttimeout)
 {
     int res;
     CURLcode return_code;
@@ -945,7 +961,7 @@ const char *kid,const char *secretkey,int timeout)
       return ERROR_CURL_GETHANDLE;
     }
     
-    res=upload_t(curlhandle,hostname,project,remotepath,localpath,kid,secretkey,timeout);
+    res=upload_t(curlhandle,hostname,project,remotepath,localpath,kid,secretkey,timeout,connecttimeout);
 
     curl_easy_cleanup(curlhandle);
     curl_global_cleanup();
@@ -957,7 +973,7 @@ const char *kid,const char *secretkey,int timeout)
 }
 
 int upload_relax(const char *hostname,const char *project,const char *remotepath,const char *sourcepath,
-const char *kid,const char *secretkey,int timeout)
+const char *kid,const char *secretkey,int timeout,int connecttimeout)
 {
     int res;
     CURLcode return_code;
@@ -975,7 +991,7 @@ const char *kid,const char *secretkey,int timeout)
       return ERROR_CURL_GETHANDLE;
     }
 
-    res=upload_relax_t(curlhandle,hostname,project,remotepath,sourcepath,kid,secretkey,timeout);
+    res=upload_relax_t(curlhandle,hostname,project,remotepath,sourcepath,kid,secretkey,timeout,connecttimeout);
     
     curl_easy_cleanup(curlhandle);
     curl_global_cleanup();
@@ -987,7 +1003,7 @@ const char *kid,const char *secretkey,int timeout)
 }
 
 int download(const char *hostname,const char *project,const char *remotepath,const char *localpath,
-const char *kid,const char *secretkey,int timeout)
+const char *kid,const char *secretkey,int timeout,int connecttimeout)
 {
     int res;
     CURLcode return_code;
@@ -1005,7 +1021,7 @@ const char *kid,const char *secretkey,int timeout)
       return ERROR_CURL_GETHANDLE;
     }
 
-    res=download_t(curlhandle,hostname,project,remotepath,localpath,kid,secretkey,timeout);
+    res=download_t(curlhandle,hostname,project,remotepath,localpath,kid,secretkey,timeout,connecttimeout);
     
     curl_easy_cleanup(curlhandle);
     curl_global_cleanup();
@@ -1016,8 +1032,8 @@ const char *kid,const char *secretkey,int timeout)
         return 0;
 }
 
-int delete(const char *hostname,const char *project,const char *remotepath,
-const char *kid,const char *secretkey,int timeout)
+int delete(const char *hostname,const char *project,const char *remotepath,const char *kid,
+const char *secretkey,int timeout,int connecttimeout)
 {
     int res;
     CURLcode return_code;
@@ -1035,7 +1051,7 @@ const char *kid,const char *secretkey,int timeout)
       return ERROR_CURL_GETHANDLE;
     }
 
-    res=delete_t(curlhandle,hostname,project,remotepath,kid,secretkey,timeout);
+    res=delete_t(curlhandle,hostname,project,remotepath,kid,secretkey,timeout,connecttimeout);
     
     curl_easy_cleanup(curlhandle);
     curl_global_cleanup();
@@ -1047,7 +1063,7 @@ const char *kid,const char *secretkey,int timeout)
 }
 
 int copy(const char *hostname,const char *project,const char *remotepath,const char *sourcepath,
-const char *kid,const char *secretkey,int timeout)
+const char *kid,const char *secretkey,int timeout,int connecttimeout)
 {
     int res;
     CURLcode return_code;
@@ -1065,7 +1081,7 @@ const char *kid,const char *secretkey,int timeout)
       return ERROR_CURL_GETHANDLE;
     }
 
-    res=copy_t(curlhandle,hostname,project,remotepath,sourcepath,kid,secretkey,timeout);
+    res=copy_t(curlhandle,hostname,project,remotepath,sourcepath,kid,secretkey,timeout,connecttimeout);
     
     curl_easy_cleanup(curlhandle);
     curl_global_cleanup();
@@ -1077,7 +1093,7 @@ const char *kid,const char *secretkey,int timeout)
 }
 
 int update_meta(const char *hostname,const char *project,const char *remotepath,const char *sourcepath,
-const char *kid,const char *secretkey,int timeout)
+const char *kid,const char *secretkey,int timeout,int connecttimeout)
 {
     int res;
     CURLcode return_code;
@@ -1095,7 +1111,7 @@ const char *kid,const char *secretkey,int timeout)
       return ERROR_CURL_GETHANDLE;
     }
 
-    res=update_meta_t(curlhandle,hostname,project,remotepath,sourcepath,kid,secretkey,timeout);
+    res=update_meta_t(curlhandle,hostname,project,remotepath,sourcepath,kid,secretkey,timeout,connecttimeout);
     
     curl_easy_cleanup(curlhandle);
     curl_global_cleanup();
@@ -1106,8 +1122,8 @@ const char *kid,const char *secretkey,int timeout)
         return 0;
 }
 
-int upload_init(const char *hostname,const char *project,const char *remotepath,
-const char *kid,const char *secretkey,char *uploadid, int timeout)
+int upload_init(const char *hostname,const char *project,const char *remotepath,const char *kid,
+const char *secretkey,char *uploadid, int timeout,int connecttimeout)
 {
     int res;
     CURLcode return_code;
@@ -1125,7 +1141,7 @@ const char *kid,const char *secretkey,char *uploadid, int timeout)
       return ERROR_CURL_GETHANDLE;
     }
 
-    res=upload_init_t(curlhandle,hostname,project,remotepath,kid,secretkey,uploadid,timeout);
+    res=upload_init_t(curlhandle,hostname,project,remotepath,kid,secretkey,uploadid,timeout,connecttimeout);
     
     curl_easy_cleanup(curlhandle);
     curl_global_cleanup();
@@ -1137,7 +1153,7 @@ const char *kid,const char *secretkey,char *uploadid, int timeout)
 }
 
 int upload_block(const char *hostname,const char *project,const char *remotepath,const char *sourcepath,
-const char *kid,const char *secretkey,const char *uploadid,int partnum,int timeout)
+const char *kid,const char *secretkey,const char *uploadid,int partnum,int timeout,int connecttimeout)
 {
     int res;
     CURLcode return_code;
@@ -1155,7 +1171,8 @@ const char *kid,const char *secretkey,const char *uploadid,int partnum,int timeo
       return ERROR_CURL_GETHANDLE;
     }
 
-    res=upload_block_t(curlhandle,hostname,project,remotepath,sourcepath,kid,secretkey,uploadid,partnum,timeout);
+    res=upload_block_t(curlhandle,hostname,project,remotepath,sourcepath,kid,secretkey,uploadid,partnum,
+                       timeout,connecttimeout);
     
     curl_easy_cleanup(curlhandle);
     curl_global_cleanup();
@@ -1167,7 +1184,7 @@ const char *kid,const char *secretkey,const char *uploadid,int partnum,int timeo
 }
 
 int upload_complete(const char *hostname,const char *project,const char *remotepath,const char *sourcepath,
-const char *kid,const char *secretkey,const char *uploadid,int partnum,int timeout)
+const char *kid,const char *secretkey,const char *uploadid,int partnum,int timeout,int connecttimeout)
 {
     int res;
     CURLcode return_code;
@@ -1185,7 +1202,8 @@ const char *kid,const char *secretkey,const char *uploadid,int partnum,int timeo
       return ERROR_CURL_GETHANDLE;
     }
 
-    res=upload_complete_t(curlhandle,hostname,project,remotepath,sourcepath,kid,secretkey,uploadid,partnum,timeout);
+    res=upload_complete_t(curlhandle,hostname,project,remotepath,sourcepath,kid,secretkey,uploadid,partnum,timeout,
+                          connecttimeout);
     
     curl_easy_cleanup(curlhandle);
     curl_global_cleanup();

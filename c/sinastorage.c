@@ -28,7 +28,7 @@ size_t writefunc(void *ptr,size_t size,size_t nmemb, void *stream)
 }
 
 
-int download_t(CURL *curlhandle, const char *hostname,const char *project,const char *remotepath,
+int download_core(CURL *curlhandle, const char *hostname,const char *project,const char *remotepath,
 const char *localpath,const char *kid,const char *secretkey,int timeout,int connecttimeout)
 {
     FILE *f;
@@ -39,8 +39,8 @@ const char *localpath,const char *kid,const char *secretkey,int timeout,int conn
     unsigned int md_len;
     unsigned char md[1024*8];
     char stringtosignbuf[1024*8],kidbuf[50];
-    char  urlbuf[1024*8],tmpbuf[1024*8];
-    char  expires[expires_len],ssig[ssig_len];
+    char  urlbuf[1024*8],remotepathbuf[1024*8];
+    char  expires[EXPIRES_LEN],ssig[SSIG_LEN];
     int i,j,k,reslen;
     time_t timer;
     reslen=1024*8;
@@ -51,11 +51,11 @@ const char *localpath,const char *kid,const char *secretkey,int timeout,int conn
     k=j+timeout;
     sprintf(expires,"%d",k);
 
-    sprintf(tmpbuf,"%s%s%s",slash_str,project,remotepath);
+    sprintf(remotepathbuf,"%s%s%s",SLASH_CHAR,project,remotepath);
 
     processkid(kid,kidbuf);          
 
-    sprintf(stringtosignbuf,"%s%s%s%s",stringtosign_get,expires,enter_str,tmpbuf);
+    sprintf(stringtosignbuf,STRINGTOSIGN_GET "%s" LF_CHAR "%s",expires,remotepathbuf);
 
     evp_md=EVP_sha1();
     HMAC(evp_md,secretkey,strlen(secretkey),stringtosignbuf,
@@ -72,8 +72,8 @@ const char *localpath,const char *kid,const char *secretkey,int timeout,int conn
 
     urlencode(ssig,strlen(ssig),stringtosignbuf);    
 
-    sprintf(urlbuf,"%s%s%s%s%s%s%s%s",hostname,tmpbuf,ssig_str,stringtosignbuf,
-expires_str,expires,kid_str,kidbuf);
+    sprintf(urlbuf,"%s%s" SSIG_PARA "%s" EXPIRES_PARA "%s" KID_PARA "%s",hostname,
+            remotepathbuf,stringtosignbuf,expires,kidbuf);
 
     if(stat(localpath,&file_info)==0)
     {
@@ -103,7 +103,7 @@ expires_str,expires,kid_str,kidbuf);
 }
 
 
-int upload_t(CURL *curlhandle, const char *hostname,const char *project,const char *remotepath,
+int upload_core(CURL *curlhandle, const char *hostname,const char *project,const char *remotepath,
 const char *localpath,const char *kid,const char *secretkey,int timeout,int connecttimeout)
 {
     FILE *f;
@@ -112,8 +112,8 @@ const char *localpath,const char *kid,const char *secretkey,int timeout,int conn
     unsigned int md_len;
     unsigned char md[1024*8];
     char  stringtosignbuf[1024*8],kidbuf[50];
-    char  urlbuf[1024*8],tmpbuf[1024*8];
-    char  expires[expires_len],ssig[ssig_len];
+    char  urlbuf[1024*8],remotepathbuf[1024*8];
+    char  expires[EXPIRES_LEN],ssig[SSIG_LEN];
     int i,j,k,reslen;
     time_t timer;
     reslen=1024*8;
@@ -124,11 +124,11 @@ const char *localpath,const char *kid,const char *secretkey,int timeout,int conn
     k=j+timeout;
     sprintf(expires,"%d",k);
 
-    sprintf(tmpbuf,"%s%s%s",slash_str,project,remotepath);
+    sprintf(remotepathbuf,"%s%s%s",SLASH_CHAR,project,remotepath);
 
     processkid(kid,kidbuf);
 
-    sprintf(stringtosignbuf,"%s%s%s%s",stringtosign_put,expires,enter_str,tmpbuf);
+    sprintf(stringtosignbuf,STRINGTOSIGN_PUT "%s" LF_CHAR "%s",expires,remotepathbuf);
 
     evp_md=EVP_sha1();
     HMAC(evp_md,secretkey,strlen(secretkey),stringtosignbuf,
@@ -145,8 +145,8 @@ const char *localpath,const char *kid,const char *secretkey,int timeout,int conn
 
     urlencode(ssig,strlen(ssig),stringtosignbuf);
 
-    sprintf(urlbuf,"%s%s%s%s%s%s%s%s",hostname,tmpbuf,ssig_str,stringtosignbuf,
-expires_str,expires,kid_str,kidbuf);
+    sprintf(urlbuf,"%s%s" SSIG_PARA "%s" EXPIRES_PARA "%s" KID_PARA "%s",hostname,
+            remotepathbuf,stringtosignbuf,expires,kidbuf);
 
     if(NULL == (f=fopen(localpath,"r")))
     {
@@ -181,7 +181,7 @@ expires_str,expires,kid_str,kidbuf);
 
 }
 
-int upload_relax_t(CURL *curlhandle,const char *hostname,const char *project,const char *remotepath,
+int upload_relax_core(CURL *curlhandle,const char *hostname,const char *project,const char *remotepath,
 const char *sourcepath,const char *kid,const char *secretkey,int timeout,int connecttimeout)
 {
     FILE *f;
@@ -190,9 +190,9 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout,int con
     const EVP_MD *evp_md;
     unsigned int md_len;
     unsigned char md[1024*8];
-    char  stringtosignbuf[1024*8],lengthbuf[50],sha1buf[80];
-    char  urlbuf[1024*8],tmpbuf[1024*8],datebuf[50],kidbuf[50];
-    char  ssig[ssig_len];
+    char  stringtosignbuf[1024*8],lengthbuf[50],sha1buf[80],authorbuf[80];
+    char  urlbuf[1024*8],remotepathbuf[1024*8],datebuf[50],kidbuf[50];
+    char  ssig[SSIG_LEN];
     int i,reslen;
     time_t timer;
     struct tm *tm;
@@ -202,7 +202,7 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout,int con
     timer=time(NULL);
     tm=localtime(&timer);
     strftime(datebuf,50,"%a, %d %b %Y %T",tm);
-    sprintf(tmpbuf,"%s%s%s",slash_str,project,remotepath);
+    sprintf(remotepathbuf,"%s%s%s",SLASH_CHAR,project,remotepath);
 
     prockidauth(kid,kidbuf);
 
@@ -224,9 +224,9 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout,int con
     SHA1(stringtosignbuf,strlen(stringtosignbuf),sha1buf);
 
     sprintf(md,"%s",hexstr(sha1buf,20));
-    sprintf(sha1buf,"%s%s",sha1_str,md);
-    sprintf(stringtosignbuf,"%s%s%s%s%s%s%s%s%s",stringtosign_relax,md,enter_str,
-  enter_str,datebuf,zero_str,enter_str,tmpbuf,relax_str);
+    sprintf(sha1buf,"%s%s",HEADER_S_SINA_SHA1,md);
+    sprintf(stringtosignbuf,STRINGTOSIGN_RELAX "%s" LF_CHAR LF_CHAR "%s"
+            ZERO_CHAR LF_CHAR "%s" RELAX_PARA,md,datebuf,remotepathbuf);
 
     evp_md=EVP_sha1();
     HMAC(evp_md,secretkey,strlen(secretkey),stringtosignbuf,
@@ -242,14 +242,14 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout,int con
     ssig[10]='\0';
 
 
-    sprintf(urlbuf,"%s%s%s",hostname,tmpbuf,relax_str);
-    sprintf(tmpbuf,"%s%s%s",author_str,kidbuf,ssig);
-    sprintf(lengthbuf,"%s%d",length_str,sendSize);
-    sprintf(md,"%s%s%s",date_str,datebuf,zero_str);
+    sprintf(urlbuf,"%s%s" RELAX_PARA,hostname,remotepathbuf);
+    sprintf(authorbuf,HEADER_AUTHOR "%s%s",kidbuf,ssig);
+    sprintf(lengthbuf,"%s%d",HEADER_S_SINA_LENGTH,sendSize);
+    sprintf(md,HEADER_DATE "%s" ZERO_CHAR,datebuf);
   
     headerlist=curl_slist_append(headerlist,sha1buf);
     headerlist=curl_slist_append(headerlist,lengthbuf);
-    headerlist=curl_slist_append(headerlist,tmpbuf);
+    headerlist=curl_slist_append(headerlist,authorbuf);
     headerlist=curl_slist_append(headerlist,md);    
 
     curl_easy_setopt(curlhandle,CURLOPT_URL,urlbuf);
@@ -270,7 +270,7 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout,int con
 }
 
 
-int delete_t(CURL *curlhandle,const char *hostname,const char *project,const char *remotepath,
+int delete_core(CURL *curlhandle,const char *hostname,const char *project,const char *remotepath,
 const char *kid,const char *secretkey,int timeout,int connecttimeout)
 {
     CURLcode r=CURLE_GOT_NOTHING;
@@ -278,8 +278,8 @@ const char *kid,const char *secretkey,int timeout,int connecttimeout)
     unsigned int md_len;
     unsigned char md[1024*8];
     char  stringtosignbuf[1024*8],kidbuf[50];
-    char  urlbuf[1024*8],tmpbuf[1024*8];
-    char  expires[expires_len],ssig[ssig_len];
+    char  urlbuf[1024*8],remotepathbuf[1024*8];
+    char  expires[EXPIRES_LEN],ssig[SSIG_LEN];
     int i,j,k,reslen;
     time_t timer;
     reslen=1024*8;
@@ -290,11 +290,11 @@ const char *kid,const char *secretkey,int timeout,int connecttimeout)
     k=j+timeout;
     sprintf(expires,"%d",k);
 
-    sprintf(tmpbuf,"%s%s%s",slash_str,project,remotepath);
+    sprintf(remotepathbuf,"%s%s%s",SLASH_CHAR,project,remotepath);
 
     processkid(kid,kidbuf);
 
-    sprintf(stringtosignbuf,"%s%s%s%s",stringtosign_delete,expires,enter_str,tmpbuf);
+    sprintf(stringtosignbuf,STRINGTOSIGN_DELETE "%s" LF_CHAR "%s",expires,remotepathbuf);
 
     evp_md=EVP_sha1();
     HMAC(evp_md,secretkey,strlen(secretkey),stringtosignbuf,
@@ -311,8 +311,8 @@ const char *kid,const char *secretkey,int timeout,int connecttimeout)
 
     urlencode(ssig,strlen(ssig),stringtosignbuf);
 
-    sprintf(urlbuf,"%s%s%s%s%s%s%s%s",hostname,tmpbuf,ssig_str,stringtosignbuf,
-expires_str,expires,kid_str,kidbuf);
+    sprintf(urlbuf,"%s%s" SSIG_PARA "%s" EXPIRES_PARA "%s" KID_PARA "%s",hostname,
+           remotepathbuf,stringtosignbuf,expires,kidbuf);
 
     curl_easy_setopt(curlhandle,CURLOPT_URL,urlbuf);
     curl_easy_setopt(curlhandle,CURLOPT_VERBOSE,1);
@@ -330,7 +330,7 @@ expires_str,expires,kid_str,kidbuf);
 
 }
 
-int copy_t(CURL *curlhandle,const char *hostname,const char *project,const char *remotepath,
+int copy_core(CURL *curlhandle,const char *hostname,const char *project,const char *remotepath,
 const char *sourcepath,const char *kid,const char *secretkey,int timeout,int connecttimeout)
 {
     CURLcode r=CURLE_GOT_NOTHING;
@@ -339,8 +339,8 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout,int con
     unsigned int md_len;
     unsigned char md[1024*8];
     char  stringtosignbuf[1024*8],kidbuf[50];
-    char  urlbuf[1024*8],tmpbuf[1024*8];
-    char  expires[expires_len],ssig[ssig_len];
+    char  urlbuf[1024*8],remotepathbuf[1024*8],sourcepathbuf[1024*8];
+    char  expires[EXPIRES_LEN],ssig[SSIG_LEN];
     int i,j,k,reslen;
     time_t timer;
     reslen=1024*8;
@@ -351,13 +351,13 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout,int con
     k=j+timeout;
     sprintf(expires,"%d",k);
 
-    sprintf(tmpbuf,"%s%s%s",slash_str,project,remotepath);
+    sprintf(remotepathbuf,"%s%s%s",SLASH_CHAR,project,remotepath);
 
     processkid(kid,kidbuf);
     
-    sprintf(urlbuf,"%s%s",source_str,sourcepath);
-    sprintf(stringtosignbuf,"%s%s%s%s%s%s",stringtosign_put,expires,
-enter_str,urlbuf,enter_str,tmpbuf);
+    sprintf(urlbuf,"%s%s",HEADER_COPY_SOURCE,sourcepath);
+    sprintf(stringtosignbuf,STRINGTOSIGN_PUT "%s" LF_CHAR "%s" LF_CHAR "%s",
+           expires,urlbuf,remotepathbuf);
 
     evp_md=EVP_sha1();
     HMAC(evp_md,secretkey,strlen(secretkey),stringtosignbuf,
@@ -374,11 +374,11 @@ enter_str,urlbuf,enter_str,tmpbuf);
 
     urlencode(ssig,strlen(ssig),stringtosignbuf);
 
-    sprintf(urlbuf,"%s%s%s%s%s%s%s%s",hostname,tmpbuf,ssig_str,stringtosignbuf,
-expires_str,expires,kid_str,kidbuf);
+    sprintf(urlbuf,"%s%s" SSIG_PARA "%s" EXPIRES_PARA "%s" KID_PARA "%s",hostname,
+           remotepathbuf,stringtosignbuf,expires,kidbuf);
 
-    sprintf(tmpbuf,"%s%s",source_str,sourcepath);    
-    headerlist=curl_slist_append(headerlist,tmpbuf);
+    sprintf(sourcepathbuf,"%s%s",HEADER_COPY_SOURCE,sourcepath);    
+    headerlist=curl_slist_append(headerlist,sourcepathbuf);
 
     curl_easy_setopt(curlhandle,CURLOPT_URL,urlbuf);
     curl_easy_setopt(curlhandle,CURLOPT_VERBOSE,1);
@@ -397,7 +397,7 @@ expires_str,expires,kid_str,kidbuf);
 }
 
 
-int update_meta_t(CURL *curlhandle,const char *hostname,const char *project,const char *remotepath,
+int update_meta_core(CURL *curlhandle,const char *hostname,const char *project,const char *remotepath,
 const char *sourcepath,const char *kid,const char *secretkey,int timeout,int connecttimeout)
 {
     FILE *f;
@@ -406,9 +406,9 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout,int con
     const EVP_MD *evp_md;
     unsigned int md_len;
     unsigned char md[1024*8];
-    char  stringtosignbuf[1024*8],sha1buf[80];
-    char  urlbuf[1024*8],tmpbuf[1024*8],datebuf[50],kidbuf[50];
-    char  ssig[ssig_len];
+    char  stringtosignbuf[1024*8],sha1buf[80],authorbuf[80];
+    char  urlbuf[1024*8],remotepathbuf[1024*8],datebuf[50],kidbuf[50];
+    char  ssig[SSIG_LEN];
     int i,j,k,reslen;
     time_t timer;
     struct tm *tm;
@@ -420,7 +420,7 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout,int con
     j=time(&timer);
     k=j+timeout;
     strftime(datebuf,50,"%a, %d %b %Y %T",tm);
-    sprintf(tmpbuf,"%s%s%s",slash_str,project,remotepath);
+    sprintf(remotepathbuf,"%s%s%s",SLASH_CHAR,project,remotepath);
 
     prockidauth(kid,kidbuf);
 
@@ -442,9 +442,9 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout,int con
     SHA1(stringtosignbuf,strlen(stringtosignbuf),sha1buf);
 
     sprintf(md,"%s",hexstr(sha1buf,20));
-    sprintf(sha1buf,"%s%s",sha1_str,md);
-    sprintf(stringtosignbuf,"%s%s%s%s%s%s%s%sfile is modified on %s%s%s%s",stringtosign_relax,
-    md,enter_str,enter_str,datebuf,zero_str,enter_str,info_x_str,datebuf,enter_str,tmpbuf,meta_str);
+    sprintf(sha1buf,"%s%s",HEADER_S_SINA_SHA1,md);
+    sprintf(stringtosignbuf,STRINGTOSIGN_RELAX "%s" LF_CHAR LF_CHAR "%s" ZERO_CHAR LF_CHAR HEADER_SINA_INFO 
+           "file is modified on %s" LF_CHAR "%s" META_PARA,md,datebuf,datebuf,remotepathbuf);
 
     evp_md=EVP_sha1();
     HMAC(evp_md,secretkey,strlen(secretkey),stringtosignbuf,
@@ -460,14 +460,14 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout,int con
     ssig[10]='\0';
 
 
-    sprintf(urlbuf,"%s%s%s",hostname,tmpbuf,meta_str);
-    sprintf(tmpbuf,"%s%s%s",author_str,kidbuf,ssig);
-    sprintf(stringtosignbuf,"%s file is modified on %s",info_x_str,datebuf);
-    sprintf(md,"%s%s%s",date_str,datebuf,zero_str);
+    sprintf(urlbuf,"%s%s" META_PARA,hostname,remotepathbuf);
+    sprintf(authorbuf,HEADER_AUTHOR "%s%s",kidbuf,ssig);
+    sprintf(stringtosignbuf,HEADER_SINA_INFO "file is modified on %s",datebuf);
+    sprintf(md,HEADER_DATE "%s" ZERO_CHAR,datebuf);
   
     headerlist=curl_slist_append(headerlist,sha1buf);
     headerlist=curl_slist_append(headerlist,stringtosignbuf);
-    headerlist=curl_slist_append(headerlist,tmpbuf);
+    headerlist=curl_slist_append(headerlist,authorbuf);
     headerlist=curl_slist_append(headerlist,md);    
 
     curl_easy_setopt(curlhandle,CURLOPT_URL,urlbuf);
@@ -487,7 +487,7 @@ const char *sourcepath,const char *kid,const char *secretkey,int timeout,int con
     }
 }
 
-int upload_init_t(CURL *curlhandle,const char *hostname,const char *project,const char *remotepath,
+int upload_init_core(CURL *curlhandle,const char *hostname,const char *project,const char *remotepath,
 const char *kid,const char *secretkey,char *uploadid,int timeout,int connecttimeout)
 {
     FILE *f;
@@ -495,10 +495,10 @@ const char *kid,const char *secretkey,char *uploadid,int timeout,int connecttime
     struct curl_slist *headerlist=NULL;
     const EVP_MD *evp_md;
     unsigned int md_len;
-    unsigned char md[1024*8];
-    char  stringtosignbuf[1024*8],contentbuf[80];
-    char  urlbuf[1024*8],tmpbuf[1024*8],datebuf[50],kidbuf[50];
-    char  expires[expires_len],ssig[ssig_len];
+    unsigned char md[1024*8],authorbuf[80];
+    char  stringtosignbuf[1024*8],contentbuf[80],returnxmlbuf[1024*8];
+    char  urlbuf[1024*8],remotepathbuf[1024*8],datebuf[50],kidbuf[50];
+    char  expires[EXPIRES_LEN],ssig[SSIG_LEN];
     int i,j,k,reslen;
     time_t timer;
     struct tm *tm;
@@ -511,16 +511,16 @@ const char *kid,const char *secretkey,char *uploadid,int timeout,int connecttime
     k=j+timeout;
     sprintf(expires,"%d",k);
     strftime(datebuf,50,"%a, %d %b %Y %T %Z",tm);
-    sprintf(tmpbuf,"%s%s%s",slash_str,project,remotepath);
+    sprintf(remotepathbuf,"%s%s%s",SLASH_CHAR,project,remotepath);
 
     prockidauth(kid,kidbuf);
 
-    f=fopen(uploadid_tmpfile,"wb+");
+    f=fopen(UPLOADID_TMP_FILE,"wb+");
     if(f==NULL)
     return ERROR_OPEN_LOCALFILE;
 
-    sprintf(stringtosignbuf,"%s%s%s%s%s%s%s",stringtosign_init,content_str,enter_str,
-    datebuf,enter_str,tmpbuf,upload_str);
+    sprintf(stringtosignbuf,STRINGTOSIGN_INIT CONTENT_TYPE_NAME LF_CHAR "%s" 
+           LF_CHAR "%s" UPLOAD_PARA,datebuf,remotepathbuf);
 
     evp_md=EVP_sha1();
     HMAC(evp_md,secretkey,strlen(secretkey),stringtosignbuf,
@@ -536,15 +536,15 @@ const char *kid,const char *secretkey,char *uploadid,int timeout,int connecttime
     ssig[10]='\0';
 
 
-    sprintf(urlbuf,"%s%s%s",hostname,tmpbuf,upload_str);
-    sprintf(tmpbuf,"%s%s%s",author_str,kidbuf,ssig);
-    sprintf(md,"%s%s",date_str,datebuf);
-    sprintf(contentbuf,"%s%s",contenttype_str,content_str);  
-    sprintf(stringtosignbuf,"%s",expect_str);
+    sprintf(urlbuf,"%s%s" UPLOAD_PARA,hostname,remotepathbuf);
+    sprintf(authorbuf,HEADER_AUTHOR "%s%s",kidbuf,ssig);
+    sprintf(md,HEADER_DATE "%s",datebuf);
+    sprintf(contentbuf,"%s%s",HEADER_CONTENT_TYPE,CONTENT_TYPE_NAME);  
+    sprintf(stringtosignbuf,"%s",EXPECT_CHAR);
 
     headerlist=curl_slist_append(headerlist,contentbuf);
     headerlist=curl_slist_append(headerlist,stringtosignbuf);
-    headerlist=curl_slist_append(headerlist,tmpbuf);
+    headerlist=curl_slist_append(headerlist,authorbuf);
     headerlist=curl_slist_append(headerlist,md);    
 
     curl_easy_setopt(curlhandle,CURLOPT_URL,urlbuf);
@@ -570,19 +570,19 @@ const char *kid,const char *secretkey,char *uploadid,int timeout,int connecttime
     }
 
     fseek(f,0,SEEK_SET);
-    fread(tmpbuf,sendSize,1,f);
+    fread(returnxmlbuf,sendSize,1,f);
     i=0;
     while(i<sendSize)
     {
-        if(tmpbuf[i]=='U'&&tmpbuf[i+1]=='p'&&tmpbuf[i+2]=='l'&&tmpbuf[i+3]=='o'&&tmpbuf[i+4]=='a'
-           &&tmpbuf[i+5]=='d'&&tmpbuf[i+6]=='I'&&tmpbuf[i+7]=='d')
+        if(returnxmlbuf[i]=='U'&&returnxmlbuf[i+1]=='p'&&returnxmlbuf[i+2]=='l'&&returnxmlbuf[i+3]=='o'&&returnxmlbuf[i+4]=='a'
+           &&returnxmlbuf[i+5]=='d'&&returnxmlbuf[i+6]=='I'&&returnxmlbuf[i+7]=='d')
         break;
         i++;
     }
     i+=9;
     for(j=0;j<32;j++)
     {
-        uploadid[j]=tmpbuf[i];
+        uploadid[j]=returnxmlbuf[i];
         i++;
     }
     uploadid[j+1]='\0';
@@ -592,7 +592,7 @@ const char *kid,const char *secretkey,char *uploadid,int timeout,int connecttime
 }
 
 
-int upload_block_t(CURL *curlhandle, const char *hostname,const char *project,const char *remotepath,
+int upload_block_core(CURL *curlhandle, const char *hostname,const char *project,const char *remotepath,
 const char *sourcepath,const char *kid,const char *secretkey,const char *uploadid,int partnum,
 int timeout,int connecttimeout)
 {
@@ -602,9 +602,9 @@ int timeout,int connecttimeout)
     const EVP_MD *evp_md;
     unsigned int md_len;
     unsigned char md[1024*8];
-    char  stringtosignbuf[1024*8],contentbuf[80];
-    char  urlbuf[1024*8],tmpbuf[1024*8],datebuf[50],kidbuf[50];
-    char  expires[expires_len],ssig[ssig_len];
+    char  stringtosignbuf[1024*8],contentbuf[80],authorbuf[80];
+    char  urlbuf[1024*8],remotepathbuf[1024*8],datebuf[50],kidbuf[50];
+    char  expires[EXPIRES_LEN],ssig[SSIG_LEN];
     int i,j,k,reslen;
     time_t timer;
     struct tm *tm;
@@ -617,7 +617,7 @@ int timeout,int connecttimeout)
     k=j+timeout;
     sprintf(expires,"%d",k);
     strftime(datebuf,50,"%a, %d %b %Y %T %Z",tm);
-    sprintf(tmpbuf,"%s%s%s",slash_str,project,remotepath);
+    sprintf(remotepathbuf,"%s%s%s",SLASH_CHAR,project,remotepath);
 
     prockidauth(kid,kidbuf);
 
@@ -637,9 +637,8 @@ int timeout,int connecttimeout)
     fseek(f,0,SEEK_SET);
 
 
-    sprintf(stringtosignbuf,"%s%s%s%s%s%s%s%s%d%s%s",stringtosign_relax,enter_str,content_str,
-    enter_str,datebuf,enter_str,tmpbuf,partnum_str,partnum,uploadid_str,uploadid);
-    printf("%s\n",stringtosignbuf);
+    sprintf(stringtosignbuf,STRINGTOSIGN_RELAX LF_CHAR CONTENT_TYPE_NAME LF_CHAR "%s" LF_CHAR 
+           "%s" PARTNUM_PARA "%d" UPLOADID_BLOCK_PARA "%s",datebuf,remotepathbuf,partnum,uploadid);
     
     evp_md=EVP_sha1();
     HMAC(evp_md,secretkey,strlen(secretkey),stringtosignbuf,
@@ -655,16 +654,16 @@ int timeout,int connecttimeout)
     ssig[10]='\0';
 
 
-    sprintf(urlbuf,"%s%s%s%d%s%s",hostname,tmpbuf,partnum_str,partnum,uploadid_str,
-    uploadid);
-    sprintf(tmpbuf,"%s%s%s",author_str,kidbuf,ssig);
-    sprintf(stringtosignbuf,"%s",expect_str);
-    sprintf(md,"%s%s",date_str,datebuf);
-    sprintf(contentbuf,"%s%s",contenttype_str,content_str);  
+    sprintf(urlbuf,"%s%s" PARTNUM_PARA "%d" UPLOADID_BLOCK_PARA "%s",hostname,remotepathbuf,partnum,
+           uploadid);
+    sprintf(authorbuf,HEADER_AUTHOR "%s%s",kidbuf,ssig);
+    sprintf(stringtosignbuf,"%s",EXPECT_CHAR);
+    sprintf(md,HEADER_DATE "%s",datebuf);
+    sprintf(contentbuf,"%s%s",HEADER_CONTENT_TYPE,CONTENT_TYPE_NAME);  
 
     headerlist=curl_slist_append(headerlist,contentbuf);
     headerlist=curl_slist_append(headerlist,stringtosignbuf);
-    headerlist=curl_slist_append(headerlist,tmpbuf);
+    headerlist=curl_slist_append(headerlist,authorbuf);
     headerlist=curl_slist_append(headerlist,md);    
 
     curl_easy_setopt(curlhandle,CURLOPT_URL,urlbuf);
@@ -686,7 +685,7 @@ int timeout,int connecttimeout)
     }
 }
 
-int upload_complete_t(CURL *curlhandle, const char *hostname,const char *project,const char *remotepath,
+int upload_complete_core(CURL *curlhandle, const char *hostname,const char *project,const char *remotepath,
 const char *sourcepath,const char *kid,const char *secretkey,const char *uploadid,int partnum,int timeout,
 int connecttimeout)
 {
@@ -696,9 +695,9 @@ int connecttimeout)
     const EVP_MD *evp_md;
     unsigned int md_len;
     unsigned char md[1024*8];
-    char  stringtosignbuf[1024*8],contentbuf[80];
-    char  urlbuf[1024*8],tmpbuf[1024*8],datebuf[50],kidbuf[50];
-    char  expires[expires_len],ssig[ssig_len];
+    char  stringtosignbuf[1024*8],contentbuf[80],authorbuf[80];
+    char  urlbuf[1024*8],remotepathbuf[1024*8],datebuf[50],kidbuf[50];
+    char  expires[EXPIRES_LEN],ssig[SSIG_LEN];
     int i,j,k,reslen;
     time_t timer;
     struct tm *tm;
@@ -712,7 +711,7 @@ int connecttimeout)
     k=j+timeout;
     sprintf(expires,"%d",k);
     strftime(datebuf,50,"%a, %d %b %Y %T %Z",tm);
-    sprintf(tmpbuf,"%s%s%s",slash_str,project,remotepath);
+    sprintf(remotepathbuf,"%s%s%s",SLASH_CHAR,project,remotepath);
 
     prockidauth(kid,kidbuf);
 
@@ -731,8 +730,8 @@ int connecttimeout)
 
     fseek(f,0,SEEK_SET);
 
-    sprintf(stringtosignbuf,"%s%s%s%s%s%s%s%s",stringtosign_init,content_str,enter_str,
-    datebuf,enter_str,tmpbuf,uploadid_com_str,uploadid);
+    sprintf(stringtosignbuf,STRINGTOSIGN_INIT CONTENT_TYPE_NAME LF_CHAR "%s" LF_CHAR 
+           "%s" UPLOADID_COMP_PARA "%s",datebuf,remotepathbuf,uploadid);
 
     evp_md=EVP_sha1();
     HMAC(evp_md,secretkey,strlen(secretkey),stringtosignbuf,
@@ -748,15 +747,15 @@ int connecttimeout)
     ssig[10]='\0';
 
 
-    sprintf(urlbuf,"%s%s%s%s",hostname,tmpbuf,uploadid_com_str,uploadid);
-    sprintf(tmpbuf,"%s%s%s",author_str,kidbuf,ssig);
-    sprintf(stringtosignbuf,"%s",expect_str);    
-    sprintf(contentbuf,"%s%s",contenttype_str,content_str); 
-    sprintf(md,"%s%s",date_str,datebuf);
+    sprintf(urlbuf,"%s%s" UPLOADID_COMP_PARA "%s",hostname,remotepathbuf,uploadid);
+    sprintf(authorbuf,HEADER_AUTHOR "%s%s",kidbuf,ssig);
+    sprintf(stringtosignbuf,"%s",EXPECT_CHAR);    
+    sprintf(contentbuf,"%s%s",HEADER_CONTENT_TYPE,CONTENT_TYPE_NAME); 
+    sprintf(md,HEADER_DATE "%s",datebuf);
   
     headerlist=curl_slist_append(headerlist,contentbuf);
     headerlist=curl_slist_append(headerlist,stringtosignbuf);
-    headerlist=curl_slist_append(headerlist,tmpbuf);
+    headerlist=curl_slist_append(headerlist,authorbuf);
     headerlist=curl_slist_append(headerlist,md);    
 
     curl_easy_setopt(curlhandle,CURLOPT_URL,urlbuf);
@@ -961,7 +960,7 @@ const char *kid,const char *secretkey,int timeout,int connecttimeout)
       return ERROR_CURL_GETHANDLE;
     }
     
-    res=upload_t(curlhandle,hostname,project,remotepath,localpath,kid,secretkey,timeout,connecttimeout);
+    res=upload_core(curlhandle,hostname,project,remotepath,localpath,kid,secretkey,timeout,connecttimeout);
 
     curl_easy_cleanup(curlhandle);
     curl_global_cleanup();
@@ -991,7 +990,7 @@ const char *kid,const char *secretkey,int timeout,int connecttimeout)
       return ERROR_CURL_GETHANDLE;
     }
 
-    res=upload_relax_t(curlhandle,hostname,project,remotepath,sourcepath,kid,secretkey,timeout,connecttimeout);
+    res=upload_relax_core(curlhandle,hostname,project,remotepath,sourcepath,kid,secretkey,timeout,connecttimeout);
     
     curl_easy_cleanup(curlhandle);
     curl_global_cleanup();
@@ -1021,7 +1020,7 @@ const char *kid,const char *secretkey,int timeout,int connecttimeout)
       return ERROR_CURL_GETHANDLE;
     }
 
-    res=download_t(curlhandle,hostname,project,remotepath,localpath,kid,secretkey,timeout,connecttimeout);
+    res=download_core(curlhandle,hostname,project,remotepath,localpath,kid,secretkey,timeout,connecttimeout);
     
     curl_easy_cleanup(curlhandle);
     curl_global_cleanup();
@@ -1051,7 +1050,7 @@ const char *secretkey,int timeout,int connecttimeout)
       return ERROR_CURL_GETHANDLE;
     }
 
-    res=delete_t(curlhandle,hostname,project,remotepath,kid,secretkey,timeout,connecttimeout);
+    res=delete_core(curlhandle,hostname,project,remotepath,kid,secretkey,timeout,connecttimeout);
     
     curl_easy_cleanup(curlhandle);
     curl_global_cleanup();
@@ -1081,7 +1080,7 @@ const char *kid,const char *secretkey,int timeout,int connecttimeout)
       return ERROR_CURL_GETHANDLE;
     }
 
-    res=copy_t(curlhandle,hostname,project,remotepath,sourcepath,kid,secretkey,timeout,connecttimeout);
+    res=copy_core(curlhandle,hostname,project,remotepath,sourcepath,kid,secretkey,timeout,connecttimeout);
     
     curl_easy_cleanup(curlhandle);
     curl_global_cleanup();
@@ -1111,7 +1110,7 @@ const char *kid,const char *secretkey,int timeout,int connecttimeout)
       return ERROR_CURL_GETHANDLE;
     }
 
-    res=update_meta_t(curlhandle,hostname,project,remotepath,sourcepath,kid,secretkey,timeout,connecttimeout);
+    res=update_meta_core(curlhandle,hostname,project,remotepath,sourcepath,kid,secretkey,timeout,connecttimeout);
     
     curl_easy_cleanup(curlhandle);
     curl_global_cleanup();
@@ -1141,7 +1140,7 @@ const char *secretkey,char *uploadid, int timeout,int connecttimeout)
       return ERROR_CURL_GETHANDLE;
     }
 
-    res=upload_init_t(curlhandle,hostname,project,remotepath,kid,secretkey,uploadid,timeout,connecttimeout);
+    res=upload_init_core(curlhandle,hostname,project,remotepath,kid,secretkey,uploadid,timeout,connecttimeout);
     
     curl_easy_cleanup(curlhandle);
     curl_global_cleanup();
@@ -1171,7 +1170,7 @@ const char *kid,const char *secretkey,const char *uploadid,int partnum,int timeo
       return ERROR_CURL_GETHANDLE;
     }
 
-    res=upload_block_t(curlhandle,hostname,project,remotepath,sourcepath,kid,secretkey,uploadid,partnum,
+    res=upload_block_core(curlhandle,hostname,project,remotepath,sourcepath,kid,secretkey,uploadid,partnum,
                        timeout,connecttimeout);
     
     curl_easy_cleanup(curlhandle);
@@ -1202,7 +1201,7 @@ const char *kid,const char *secretkey,const char *uploadid,int partnum,int timeo
       return ERROR_CURL_GETHANDLE;
     }
 
-    res=upload_complete_t(curlhandle,hostname,project,remotepath,sourcepath,kid,secretkey,uploadid,partnum,timeout,
+    res=upload_complete_core(curlhandle,hostname,project,remotepath,sourcepath,kid,secretkey,uploadid,partnum,timeout,
                           connecttimeout);
     
     curl_easy_cleanup(curlhandle);

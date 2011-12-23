@@ -35,6 +35,7 @@ int signature(const char *secretkey, const char *stringtosign, char *result)
  
     memcpy(result,resultbuf,strlen(resultbuf));
     result[strlen(resultbuf)]=0;   
+    return 0;
 }
 
 void urlencode(const char *s,int len,char *result)

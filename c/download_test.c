@@ -5,7 +5,7 @@ int main(int c,char *argv[])
 {
   char *hostname="sinastorage.com";
   char *project="sandbox";
-  char *remotepath="/ty/4.c";
+  char *remotepath="/ty/test1.c";
   char *localpath="sp.c";
   char *kid="SYS0000001000SANDBOX";
   char *secretkey="1111111111111111111111111111111111111111";

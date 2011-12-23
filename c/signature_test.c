@@ -4,11 +4,11 @@
 int main(int argc, char **argv)
 {
    char *secretkey="1111111111111111111111111111111111111111";
-   char *stringtosignbuf="GET\n\n\n1175139620\n/sinastorage.com/sandbox/123.jpg";
+   char *stringtosign="GET\n\n\n1175139620\n/sinastorage.com/sandbox/123.jpg";
    char result[20];
    int res;
    
-   res=signature(secretkey,stringtosignbuf,result);
+   res=signature(secretkey,stringtosign,result);
    if(res)
    printf("signature failed!\n");
    else

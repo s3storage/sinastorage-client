@@ -5,6 +5,6 @@
 
 #define SSIG_LEN 11
 
-int signature(const char *secretkeyy, const char *stringtosignbuf, char *resultbuf);
+int signature(const char *secretkey, const char *stringtosignbuf, char *resultbuf);
 
 #endif

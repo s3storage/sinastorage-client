@@ -147,7 +147,7 @@ def downloadquery( nation, accesskey, secretkey,
 
     if et in types.StringTypes :
         dt = expires.encode('utf-8')
-    elif et == NoneType :
+    elif expires is None :
         dt = datetime.datetime.utcnow()
         dt = dt.strftime('%a, %d %b %Y %H:%M:%S +0000')
     elif et == datetime.timedelta :
@@ -294,3 +294,16 @@ if __name__ == '__main__':
                    )
 
 
+    expires = str( time.time().__int__() + 60 * 5 )
+
+    # expires = 'Tue, 7 Feb 2012 23:45:08 +0800'
+
+    r = downloadquery( "sys", "sandbox", "1" * 40,
+                       "sandbox2", "testfile", expires
+    )
+
+    h = httplib.HTTPConnection( "218.30.126.203", 80, )
+    h.request( 'GET', r[ 0 ], None, r[ 1 ] )
+    resp = h.getresponse()
+
+    print resp.status

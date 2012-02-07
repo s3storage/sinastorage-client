@@ -1,21 +1,65 @@
 
+import os, sys
 import datetime
+import time
 import types
 import hashlib
 import hmac
+import httplib
+import urllib
+
+def put( ip, port, nation, accesskey, secretkey, project, key, fn ):
+    flen = os.path.getsize( fn )
+    expires = str( time.time().__int__() + 60 * 5 )
+
+    args = uploadquery( nation, accesskey, secretkey, project, key, flen, expires = expires )
+
+    uri = args[ 0 ]
+    auth = args[ 1 ][ 'Authorization' ].split( " " )[ 1 ].split( ":" )[ 1 ]
+
+    uri = uri + "?" + "&".join( [ "KID=" + nation.lower() + "," + accesskey,
+                                  "Expires=" + expires,
+                                  "ssig=" + urllib.quote_plus( auth ), ] )
+
+    with open( fn, 'r' ) as f:
+        h = httplib.HTTPConnection( ip, port )
+        h.request( 'PUT', uri, f )
+        resp = h.getresponse()
+
+    return resp
+
+
+def get( ip, port, nation, accesskey, secretkey, project, key ):
+    expires = str( time.time().__int__() + 60 * 5 )
+
+    args = downloadquery( nation, accesskey, secretkey, project, key, expires = expires )
+
+    print args
+    uri = args[ 0 ]
+    auth = args[ 1 ][ 'Authorization' ].split( " " )[ 1 ].split( ":" )[ 1 ]
+
+    uri = uri + "?" + "&".join( [ "KID=" + nation.lower() + "," + accesskey,
+                                  "Expires=" + expires,
+                                  "ssig=" + urllib.quote_plus( auth ), ] )
+
+    h = httplib.HTTPConnection( ip, port )
+    h.request( 'GET', uri )
+    resp = h.getresponse()
+
+    return resp
 
 
 def uploadquery( nation, accesskey, secretkey,
                  project, key,
-                 Length, hashinfo,
+                 Length, hashinfo = '',
                  expires = None,
                  metas = {},
                  relax = False,
                  **kwargs ) :
-    
-    
+
+
     hl = len(hashinfo)
-    
+
     if hl == 40 : #sha1 hex
         hk = 's-sina-sha1'
     elif hl == 28 :
@@ -24,9 +68,11 @@ def uploadquery( nation, accesskey, secretkey,
         hk = 's-sina-md5' #md5 hex
     elif hl == 24 :
         hk = 'Content-MD5' #md5 base64
-    
+    else:
+        hk = ''
+
     et = type(expires)
-    
+
     if et in types.StringTypes :
         dt = expires.encode('utf-8')
     elif et == types.NoneType :
@@ -37,14 +83,15 @@ def uploadquery( nation, accesskey, secretkey,
         dt = dt.strftime('%a, %d %b %Y %H:%M:%S +0000')
     elif et == datetime.datetime :
         dt = dt.strftime('%a, %d %b %Y %H:%M:%S +0000')
-    
+
     metas = metas.copy()
-    
-    metas[hk] = hashinfo
-    
+
+    if hk != '':
+        metas[hk] = hashinfo
+
     if 'decovered' in kwargs :
         metas['x-sina-decovered'] = bool(kwargs['decovered'])
-    
+
     if 'autoclean' in kwargs :
         ac = kwargs['autoclean']
         tac = type(ac)
@@ -54,39 +101,40 @@ def uploadquery( nation, accesskey, secretkey,
             metas['s-sina-expires'] = ac.encode('utf-8')
         elif tac == datetime.datetime :
             metas['s-sina-expires'] = ac.strftime('%a, %d %b %Y %H:%M:%S +0000')
-    
+
     key = key.encode('utf-8')
     resource = "/"+str(project)+"/"+key
-    
+
     h = kwargs.get('vhost', False )
     url = '/'+key if h else resource
-    
+
     qs = []
-    
+
     if relax :
         resource += '?relax'
         qs += ['relax']
         metas['s-sina-length'] = str(Length)
     else :
         metas['Content-Length'] = str(Length)
-    
+
     ct = metas.get('Content-Type', '')
-    
+
     mts = [ (str(k).lower(), v.encode('utf-8')) for k, v in metas.items() ]
     mts = [ k+':'+v for k, v in mts if k.startswith('x-sina-') or k.startswith('x-amz-meta-') ]
     mts.sort()
-    
+
     stringtosign = '\n'.join( ["PUT", hashinfo, ct, dt] + mts + [resource] )
-    
+
     ssig = hmac.new( secretkey, stringtosign, hashlib.sha1 ).digest().encode('base64')
-    
+
     metas['Date'] = dt
     metas['Authorization'] = nation.upper() + ' ' + accesskey + ':' + \
                              ssig[5:15]
-    
+
     url += '&'.join(qs)
-    
+
     return url, metas
+
 
 
 def downloadquery( nation, accesskey, secretkey,
@@ -111,15 +159,15 @@ def downloadquery( nation, accesskey, secretkey,
 
     key = key.encode('utf-8')
     resource = "/"+str(project)+"/"+key
-    
+
     h = kwargs.get('vhost', False )
     url = '/'+key if h else resource
-    
+
 
     stringtosign = '\n'.join( ["GET", "", "", dt]  + [resource] )
-    
+
     ssig = hmac.new( secretkey, stringtosign, hashlib.sha1 ).digest().encode('base64')
-    
+
     metas['Date'] = dt
     metas['Authorization'] = nation.upper() + ' ' + accesskey + ':' + \
                              ssig[5:15]
@@ -134,7 +182,7 @@ def deletequery( nation, accesskey, secretkey,
 
     key = key.encode('utf-8')
     resource = "/" + str(project) + "/" + key
-    
+
     h = kwargs.get('vhost', False )
     url = '/' + key if h else resource
 
@@ -151,7 +199,7 @@ def deletequery( nation, accesskey, secretkey,
                 metas[k] = metas[k].strftime('%a, %d %b %Y %H:%M:%S +0000')
             elif et == datetime.datetime :
                 metas[k] = metas[k].strftime('%a, %d %b %Y %H:%M:%S +0000')
-            
+
     mts = [ (str(k).lower(), v.encode('utf-8')) for k, v in metas.items() ]
     mts = [ k + ':' + v for k, v in mts if "date" in k ]
     mts.sort()
@@ -159,9 +207,9 @@ def deletequery( nation, accesskey, secretkey,
 
     stringtosign = '\n'.join( ["DELETE", "","","" ] + mts + [resource] )
     stringtosign.encode('utf-8')
-    
+
     ssig = hmac.new( secretkey, stringtosign, hashlib.sha1 ).digest().encode('base64')
-    
+
     metas['Authorization'] = nation.upper() + ' ' + accesskey + ':' + \
                              ssig[5:15]
 
@@ -176,7 +224,7 @@ def copyquery( nation, accesskey, secretkey,
 
     destinationObject = destinationObject.encode('utf-8')
     resource = "/" + str(destinationbucket) + "/" + destinationObject
-    
+
     h = kwargs.get('vhost', False )
     url = '/' + destinationObject if h else resource
 
@@ -198,24 +246,24 @@ def copyquery( nation, accesskey, secretkey,
     mts = [ (str(k).lower(), v.encode('utf-8')) for k, v in metas.items() ]
     mts = [ k + ':' + v for k, v in mts if 'source' in k ]
     mts.sort()
-    
+
     stringtosign = '\n'.join( ["PUT", "", "", dt ] + mts + [resource] )
-        
+
     ssig = hmac.new( secretkey, stringtosign, hashlib.sha1 ).digest().encode('base64')
-    
+
     metas['Authorization'] = nation.upper() + ' ' + accesskey + ':' + \
                              ssig[5:15]
 
     return url, metas
 
 
-    
+
 if __name__ == '__main__':
-    
-    print uploadquery( 'sina', 'product', 
+
+    print uploadquery( 'sina', 'product',
                        'uV3F3YluFJax1cknvbcGwgjvx4QpvB+leU8dUj2o',
-                       'yourproject', 'abc/def.jpg', 
-                       11, 'XrY7u+Ae7tCTyyK7j1rNww==', 
+                       'yourproject', 'abc/def.jpg',
+                       11, 'XrY7u+Ae7tCTyyK7j1rNww==',
                        expires='Tue, 10 Aug 2010 16:08:08 +0000',
                        metas = { 'Content-Type': 'text/plain',
                                  'Content-Encoding': 'utf-8',
@@ -237,12 +285,12 @@ if __name__ == '__main__':
                                }
                      )
 
-    print copyquery( 'amz', '15B4D3461F177624206A', 
+    print copyquery( 'amz', '15B4D3461F177624206A',
                      'uV3F3YluFJax1cknvbcGwgjvx4QpvB+leU8dUj2o',
-                     'atlantic', 'jetsam', 
+                     'atlantic', 'jetsam',
                      'Wed, 20 Feb 2008 22:12:21 +0000',
                      metas = {'x-amz-copy-source' : '/pacific/flotsam',
                              }
                    )
 
-    
+

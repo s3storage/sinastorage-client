@@ -1,12 +1,32 @@
 
 import os, sys
+import stat
 import datetime
 import time
 import types
-import hashlib
+
+
+# # compatible with python2.4
+# import hashlib
+try:
+    import hashlib
+    sha1 = hashlib.sha1
+except ImportError:
+    import sha
+    class Sha1:
+        digest_size = 20
+        def new(self, inp=''):
+            return sha.sha(inp)
+
+    sha1 = Sha1()
+
 import hmac
 import httplib
 import urllib
+
+def fsize( f ):
+    st = os.fstat( f.fileno() )
+    return st[ stat.ST_SIZE ]
 
 def put( ip, port, nation, accesskey, secretkey, project, key, fn ):
     flen = os.path.getsize( fn )
@@ -21,12 +41,25 @@ def put( ip, port, nation, accesskey, secretkey, project, key, fn ):
                                   "Expires=" + expires,
                                   "ssig=" + urllib.quote_plus( auth ), ] )
 
-    with open( fn, 'r' ) as f:
+    # # compatible with python2.4
+    # with open( fn, 'r' ) as f:
+    f = open( fn, 'r' )
+    try:
         h = httplib.HTTPConnection( ip, port )
-        h.request( 'PUT', uri, f )
+        h.putrequest( 'PUT', uri )
+        h.putheader( "Content-Length", str( fsize(f) ) )
+        h.endheaders()
+        while True:
+            data = f.read( 1024 * 1024 * 10 )
+            if data == '':
+                break
+            h.send( data )
+        # h.request( 'PUT', uri, f.fileno() )
         resp = h.getresponse()
+        return resp
+    finally:
+        f.close()
 
-    return resp
 
 
 def get( ip, port, nation, accesskey, secretkey, project, key ):
@@ -106,7 +139,12 @@ def uploadquery( nation, accesskey, secretkey,
     resource = "/"+str(project)+"/"+key
 
     h = kwargs.get('vhost', False )
-    url = '/'+key if h else resource
+    # # compatible with python2.4
+    # url = '/'+key if h else resource
+    if h:
+        url = '/' + key
+    else:
+        url = resource
 
     qs = []
 
@@ -125,7 +163,7 @@ def uploadquery( nation, accesskey, secretkey,
 
     stringtosign = '\n'.join( ["PUT", hashinfo, ct, dt] + mts + [resource] )
 
-    ssig = hmac.new( secretkey, stringtosign, hashlib.sha1 ).digest().encode('base64')
+    ssig = hmac.new( secretkey, stringtosign, sha1 ).digest().encode('base64')
 
     metas['Date'] = dt
     metas['Authorization'] = nation.upper() + ' ' + accesskey + ':' + \
@@ -161,12 +199,17 @@ def downloadquery( nation, accesskey, secretkey,
     resource = "/"+str(project)+"/"+key
 
     h = kwargs.get('vhost', False )
-    url = '/'+key if h else resource
+    # # compatible with python2.4
+    # url = '/'+key if h else resource
+    if h:
+        url = '/' + key
+    else:
+        url = resource
 
 
     stringtosign = '\n'.join( ["GET", "", "", dt]  + [resource] )
 
-    ssig = hmac.new( secretkey, stringtosign, hashlib.sha1 ).digest().encode('base64')
+    ssig = hmac.new( secretkey, stringtosign, sha1 ).digest().encode('base64')
 
     metas['Date'] = dt
     metas['Authorization'] = nation.upper() + ' ' + accesskey + ':' + \
@@ -184,7 +227,12 @@ def deletequery( nation, accesskey, secretkey,
     resource = "/" + str(project) + "/" + key
 
     h = kwargs.get('vhost', False )
-    url = '/' + key if h else resource
+    # # compatible with python2.4
+    # url = '/' + key if h else resource
+    if h:
+        url = '/' + key
+    else:
+        url = resource
 
     for k,v in metas.items():
         if "date" in k:
@@ -208,7 +256,7 @@ def deletequery( nation, accesskey, secretkey,
     stringtosign = '\n'.join( ["DELETE", "","","" ] + mts + [resource] )
     stringtosign.encode('utf-8')
 
-    ssig = hmac.new( secretkey, stringtosign, hashlib.sha1 ).digest().encode('base64')
+    ssig = hmac.new( secretkey, stringtosign, sha1 ).digest().encode('base64')
 
     metas['Authorization'] = nation.upper() + ' ' + accesskey + ':' + \
                              ssig[5:15]
@@ -226,7 +274,12 @@ def copyquery( nation, accesskey, secretkey,
     resource = "/" + str(destinationbucket) + "/" + destinationObject
 
     h = kwargs.get('vhost', False )
-    url = '/' + destinationObject if h else resource
+    # # compatible with python2.4
+    # url = '/' + destinationObject if h else resource
+    if h:
+        url = '/' + destinationObject
+    else:
+        url = resource
 
 
     et = type(Date)
@@ -249,7 +302,7 @@ def copyquery( nation, accesskey, secretkey,
 
     stringtosign = '\n'.join( ["PUT", "", "", dt ] + mts + [resource] )
 
-    ssig = hmac.new( secretkey, stringtosign, hashlib.sha1 ).digest().encode('base64')
+    ssig = hmac.new( secretkey, stringtosign, sha1 ).digest().encode('base64')
 
     metas['Authorization'] = nation.upper() + ' ' + accesskey + ':' + \
                              ssig[5:15]

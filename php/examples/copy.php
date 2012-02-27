@@ -1,25 +1,6 @@
 <?php
 require("../SinaStorageService.php");
-
-$project = "sandbox";
-$accesskey = "SYS0000000000SANDBOX";
-$secretkey = "1111111111111111111111111111111111111111";
-
-//写一个测试文件
-$localfile = "1.html";
-$content = <<<HTML
-<html>
-  <body>
-    <p>hello world.</p>
-  </body>
-</html>
-HTML;
-file_put_contents($localfile, $content);
-
-//准备请求需要的数据
-$file_content = file_get_contents($localfile);
-$file_length = filesize($localfile);
-$file_sha1 = sha1($file_content);
+require_once( "conf.php" );
 
 $o = SinaStorageService::getInstance($project, $accesskey, $secretkey);
 
@@ -30,8 +11,5 @@ $o->setRequestHeaders(array("fortest"=>1));
 //设置使用验证方式
 $o->setAuth(true);
 
-echo "========copy=========\n";
-var_dump($o->copyFile("1123.html","123.html", $result));
+$rc = $o->copyFile("1123.html","123.html", $result);
 echo $result;
-echo "========copy=========\n";
-echo "\n\n";

@@ -1,9 +1,6 @@
 <?php
 require("../SinaStorageService.php");
-
-$project = "sandbox";
-$accesskey = "SYS0000000000SANDBOX";
-$secretkey = "1111111111111111111111111111111111111111";
+require_once( "conf.php" );
 
 //写一个测试文件
 $localfile = "1.html";
@@ -29,12 +26,5 @@ $o->setCURLOPTs(array(CURLOPT_VERBOSE=>1));
 //设置使用验证方式
 $o->setAuth(true);
 
-//上传文件Relax方式
-echo "========uploadrelax=========\n";
 var_dump($o->uploadFileRelax("reelax/123.html",$file_sha1, $file_length, $result));
 echo $result;
-echo "========uploadrelax=========\n";
-echo "\n\n";
-//exit;
-
-

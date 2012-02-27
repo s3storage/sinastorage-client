@@ -1,9 +1,6 @@
 <?php
 require("../SinaStorageService.php");
-
-$project = "sandbox";
-$accesskey = "SYS0000000000SANDBOX";
-$secretkey = "1111111111111111111111111111111111111111";
+require_once( "conf.php" );
 
 //写一个测试文件
 $localfile = "1.html";
@@ -30,11 +27,5 @@ $o->setQueryStrings(array("sldkfj"=>123));
 //设置使用验证方式
 $o->setAuth(true);
 
-
-//上传文件
-echo "========upload=========\n";
 var_dump($o->uploadFile("foo/bar/123.html",$file_content, $file_length, "text/html",$result));
 echo $result;
-echo "========upload=========\n";
-echo "\n\n";
-//exit;

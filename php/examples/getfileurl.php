@@ -1,5 +1,5 @@
 <?php
-require("SinaService/SinaStorageService/SinaStorageService.php");
+require("../SinaStorageService.php");
 
 $project = "sandbox";
 $accesskey = "SYS0000000000SANDBOX";

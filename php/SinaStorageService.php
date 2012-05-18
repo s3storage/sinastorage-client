@@ -202,6 +202,31 @@ class SinaStorageService extends SinaService
 		list($result, $result_info) = $this->cURL($url, "PUT");
 		return $result_info['http_code'] == self::HTTP_STATUS_OK;
 	}
+
+       /** 
+         * Copy file between two projects.
+         * 
+         * Original docs(UTF-8) from SinaStorage:
+         * REST型COPY，不上传具体的文件内容。而是通过COPY方式对系统内另一文件进行复制。
+         * 
+         * @param string $dest_name  Destination file name.
+         * @param string $src_proj  SrcProject path.
+         * @param string $src_name  Srcfile path.
+         * @param string &$result  If failure, you may need check this out for reasons. 
+         */
+        public function copyFileBetweenProject($dest_name, $src_proj, $src_name, &$result = NULL){
+                $url = self::$domain . $this->project . "/" . $dest_name;
+                if($this->extra == "?"){
+                        $this->setExtra("?copy");
+                }   
+                $this->request_headers['Content-Length'] = 0;
+                $this->request_headers['x-amz-copy-source'] = "/" . $src_proj . "/" . $src_name;
+                $this->setCURLOPTs(array(
+                        CURLOPT_HEADER          =>      1,  
+                )); 
+                list($result, $result_info) = $this->cURL($url, "PUT");
+                return $result_info['http_code'] == self::HTTP_STATUS_OK;
+        }   
 	
 	/**
 	 * Get file from SinaStorage.

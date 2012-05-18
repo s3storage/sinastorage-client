@@ -13,5 +13,5 @@ $o->setRequestHeaders(array("fortest"=>1));
 //设置使用验证方式
 $o->setAuth(true);
 
-$rc = $o->copyFile("1123.html", $src_projec_name , "123.html", $result);
+$rc = $o->copyFileBetweenProject("1123.html", $src_projec_name , "123.html", $result);
 echo $result;

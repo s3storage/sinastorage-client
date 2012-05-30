@@ -45,7 +45,7 @@ class SinaStorageService extends SinaService
 	
 	/**
 	 * Whether need auth.
-	 */   
+	 */
 	private $need_auth = false;
 	
 	/**
@@ -147,9 +147,8 @@ class SinaStorageService extends SinaService
 			CURLOPT_POSTFIELDS	=>	$file_content,
 			CURLOPT_HEADER		=>	1,
 		));
-        list($result, $result_info) = $this->cURL($url, "PUT");
-        $result_info['http_code'] == self::HTTP_STATUS_OK;
-        return self::HTTP_STATUS_OK;          	
+		list($result, $result_info) = $this->cURL($url, "PUT");
+		return $result_info['http_code'] == self::HTTP_STATUS_OK;
 	}
 	
 	/**
@@ -238,8 +237,7 @@ class SinaStorageService extends SinaService
 	public function getFile($dest_name, &$result){
 		$url = self::$domain . $this->project . "/" . $dest_name;
 		list($result, $result_info) = $this->cURL($url, "GET");
-		$result_info['http_code'] == self::HTTP_STATUS_OK;
-        return $result_info['http_code'];
+		return $result_info['http_code'] == self::HTTP_STATUS_OK;
 	}
 	
 	/**
@@ -267,10 +265,7 @@ class SinaStorageService extends SinaService
 	public function deleteFile($dest_name, &$result = NULL){
 		$url = self::$domain . $this->project . "/" . $dest_name;
 		list($result, $result_info) = $this->cURL($url, "DELETE");
-        $result_info['http_code'] == self::HTTP_STATUS_NO_CONTENT;
-        return self::HTTP_STATUS_NO_CONTENT;                    
-	}
-
+		return $result_info['http_code'] == self::HTTP_STATUS_NO_CONTENT;
 	public function getMeta($dest_name, &$result){
 		$url = self::$domain . $this->project . "/" . $dest_name;
 		$this->setExtra("?meta");

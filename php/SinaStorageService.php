@@ -266,6 +266,8 @@ class SinaStorageService extends SinaService
 		$url = self::$domain . $this->project . "/" . $dest_name;
 		list($result, $result_info) = $this->cURL($url, "DELETE");
 		return $result_info['http_code'] == self::HTTP_STATUS_NO_CONTENT;
+        }
+
 	public function getMeta($dest_name, &$result){
 		$url = self::$domain . $this->project . "/" . $dest_name;
 		$this->setExtra("?meta");

@@ -53,7 +53,9 @@ class SinaStorageService extends SinaService
 	 * Case sensitive.
 	 */
 	private $extra = "?";
-	private $extra_array = array("copy", "acl", "location", "logging", "relax", "meta", "torrent", "uploadID", "ip");
+        private $extra_array = array("copy", "acl", "location", "logging",
+             "relax", "meta", "torrent", "uploadID", "ip", "uploads",
+             "partNumber");
 	
 	/**
 	 * Set query strings

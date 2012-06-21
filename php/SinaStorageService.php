@@ -250,10 +250,10 @@ class SinaStorageService extends SinaService
 	 * @param string &$result  Retrieved data.
 	 * @return bool
 	 */
-	public function getFileUrl($dest_name, &$result){
-		if(empty($dest_name)) return false; 
+	public function getFileUrl($dest_name, &$result, $requestMethod='GET'){
+		if(empty($dest_name)) return false;
 		$url = self::$domain . $this->project . "/" . $dest_name;
-		$result = $this->cURL($url, "GET", true);
+		$result = $this->cURL($url, $requestMethod, true);
 		return true;
 	}
 	

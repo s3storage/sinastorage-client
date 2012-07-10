@@ -140,7 +140,7 @@ class SinaStorageService extends SinaService
 	 */
 	public function uploadFile($dest_name, $file_content, $file_size, $file_mimetype, &$result = NULL){
         if( self::$domain == "http://sinastorage.com/" ){
-            self::$domain = "http://up.sinastorage.com/";
+            self::$domain = "http://sinastorage.com/";
         }
 		$url = self::$domain . $this->project . "/" . $dest_name;
 		$this->request_headers['Content-Length'] = $file_size;

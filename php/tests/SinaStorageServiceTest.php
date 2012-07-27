@@ -11,10 +11,11 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
      * @var SinaStorageService
      */
     protected $object;
+    protected $bafine;
 
     public static function setUpBeforeClass()
     {
-       //echo $this->object;
+
     }
 
     public static function tearDownAfterClass()
@@ -143,28 +144,42 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
 
     /**
      * @covers SinaStorageService::copyFile
-     * @todo   Implement testCopyFile().
+     * @group copyFile
+     * @dataProvider copyFileData
      */
-    public function testCopyFile()
+    public function testCopyFile($src,$expected)
     {
-        // Remove the following lines when you implement this test.
-        $this->markTestIncomplete(
-          'This test has not been implemented yet.'
-        );
+        $dest = "copied/".array_pop(explode("/",$src,2));
+        $this->object->copyFile($dest, $src, $result);
+        $httpCode = $this->getHttpCode($result);
+        $this->assertEquals($expected, $httpCode);
     }
 
+    public function copyFileData()
+    {
+        return array(
+            array( 'file4UploadTest/pas.txt', 200),
+            array( 'file4UploadTest/afine.txt', 200)
+        );
+    }
     /**
      * @covers SinaStorageService::copyFileBetweenProject
-     * @todo   Implement testCopyFileBetweenProject().
+     * @group copyFileBetweenProject
      */
+    // create a function provide file uploaded in project
+    // because some tests require precondition that some files in server.
     public function testCopyFileBetweenProject()
     {
-        // Remove the following lines when you implement this test.
-        $this->markTestIncomplete(
-          'This test has not been implemented yet.'
-        );
+
     }
 
+    public function copyFileBetweenProjectData()
+    {
+        return array(
+            array( 'file4UploadTest/pas.txt', 200),
+            array( 'file4UploadTest/afine.txt', 200)
+        );
+    }
     /**
      * @covers SinaStorageService::getFile
      * @group getFile
@@ -193,6 +208,17 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
             array( 'foo/bar/1.html', '229.152.128.247', 403),
             array( 'nonexistfile.html', '', 404),
             array( 'foo/bar/1.html', '', 200)
+       );
+    }
+
+    public function basicData()
+    {
+        return array(
+            array( '/file_uploaded/birth.txt', 200),
+            array( '/file_uploaded/nnn3.txt', 200),
+            array( 'foo/bar/1.html', 200),
+            array( 'nonexistfile.html', 404),
+            array( 'foo/bar/1.html', 200)
        );
     }
 
@@ -259,52 +285,71 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
 
     /**
      * @covers SinaStorageService::getMeta
-     * @todo   Implement testGetMeta().
+     * @group getMeta
+     * @dataProvider basicData
      */
-    public function testGetMeta()
+    public function testGetMeta($file, $expected)
     {
-        // Remove the following lines when you implement this test.
-        $this->markTestIncomplete(
-          'This test has not been implemented yet.'
-        );
+        $this->object->setCURLOPTs(array(CURLOPT_HEADER=>1));
+        $this->object->getMeta($file,$result);
+        $httpCode = $this->getHttpCode($result);
+        $this->assertEquals($expected,$httpCode);
     }
 
     /**
      * @covers SinaStorageService::updateMeta
-     * @todo   Implement testUpdateMeta().
+     * @group updateMeta
+     * @dataProvider basicData
      */
-    public function testUpdateMeta()
+    public function testUpdateMeta($file,$expected)
     {
-        // Remove the following lines when you implement this test.
-        $this->markTestIncomplete(
-          'This test has not been implemented yet.'
-        );
+        $this->object->setCURLOPTs(array(CURLOPT_HEADER=>1));
+        $this->object->setRequestHeaders(array("x-sina-info-int"=>33,"x-sina-info"=>"testing_$file"));
+        $this->object->updateMeta($file, $result);
+        $httpCode = $this->getHttpCode($result);
+
+        $this->assertEquals($expected, $httpCode);
     }
 
     /**
      * @covers SinaStorageService::getFileList
-     * @todo   Implement testGetFileList().
+     * @group getFileList
      */
     public function testGetFileList()
     {
-        // Remove the following lines when you implement this test.
-        $this->markTestIncomplete(
-          'This test has not been implemented yet.'
-        );
+        $this->object->setCURLOPTs(array(CURLOPT_HEADER=>1));
+        $this->object->getFileList($result);
+        $httpCode = $this->getHttpCode($result);
+        $this->assertEquals(200,$httpCode);
     }
 
     /**
      * @covers SinaStorageService::listFiles
-     * @todo   Implement testListFiles().
+     * @group listFiles
+     * @dataProvider listFilesData
      */
-    public function testListFiles()
+    public function testListFiles($marker, $pageeach)
     {
-        // Remove the following lines when you implement this test.
-        $this->markTestIncomplete(
-          'This test has not been implemented yet.'
-        );
+        /**
+         * $this->object->setCURLOPTs(array(CURLOPT_HEADER=>1));
+         * listFiles() function return a json-decoded value,
+               ignoring whether CURLOPT_HEADER is set,so cannot receive
+               the respond header.
+         */
+        $result = $this->object->listFiles($marker, $pageeach, "");
+
+        $this->assertEquals($marker, $result["Marker"]);
+        $this->assertGreaterThan($marker, $result["Contents"][0]["Name"]);
+        $this->assertEquals($pageeach, $result["ContentsQuantity"]);
     }
 
+    public function listFilesData()
+    {
+        return array(
+            array( 'foo/bar/1.html', 10, 200),
+            array( 'file4UploadTest/afine.txt', 5, 200)
+        );
+    }
     /**
      * @covers SinaStorageService::setAuth
      * @todo   Implement testSetAuth().

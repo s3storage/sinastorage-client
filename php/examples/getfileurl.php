@@ -21,4 +21,8 @@ $o->setExtra("?ip=219.142.118.237");
 //$o->setExtra("?ip=1175135000,61.135.152.");
 
 $r = $o->getFileUrl("foo/bar/1.html",$result);
-echo $result."\n";
+echo "With ip limit: " . $result."\n";
+
+$o::$domain = "http://";
+$r = $o->getFileUrl("foo/bar/1.html",$result);
+echo "Use project as domain: " . $result."\n";

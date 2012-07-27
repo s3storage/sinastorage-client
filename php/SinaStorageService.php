@@ -542,7 +542,13 @@ class SinaStorageService extends SinaService
 		
 		$access_key = strtolower($this->access_key);
 		$tmp = explode("0", $access_key);
-		$KID = $tmp[0].",".substr($access_key, -10);
+                $nation = $tmp[ 0 ];
+                $uid = substr($access_key, -10);
+                if ( $nation != "sae" ) {
+                    $uid = explode( "0", $uid );
+                    $uid = $uid[ count( $uid )-1 ];
+                }
+		$KID = $nation.",".$uid;
 
 		return array($ssig, $KID);
 	}

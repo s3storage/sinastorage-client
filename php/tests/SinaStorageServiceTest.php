@@ -60,7 +60,7 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
      */
     public function testGetInstance()
     {
-        $o = SinaStorageService::getInstance($project, $accesskey, $secretkey);
+        //$o = SinaStorageService::getInstance($project, $accesskey, $secretkey);
     }
 
     public function getHttpCode($result)
@@ -78,19 +78,7 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
      */
     public function testUploadFile($localfile, $expected)
     {
-        $fileType = mime_content_type( $localfile );
-        $fileLength = filesize($localfile);
-        $fileContent = "";
-
-        $file_handle = fopen( $localfile , "r");
-        while (!feof($file_handle)) {
-            $fileContent = $fileContent.fread($file_handle,513);
-        }
-        fclose($file_handle);
-
-        $file_sha1 = sha1($fileContent);
-        $this->object->uploadFile("$localfile",$fileContent, $fileLength, $fileType, $result);
-        $httpCode = $this->getHttpCode($result);
+        $httpCode = $this->upSingleFile($localfile);
 
         $this->assertEquals( $expected, $httpCode);
     }
@@ -103,6 +91,27 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
             array( 'file4UploadTest/pas.txt', 200),
             array( 'file4UploadTest/afine.txt', 200)
         );
+    }
+
+    //public function upSingleFile($localfile, $change = false)
+    public function upSingleFile($localfile)
+    {
+        $fileType = mime_content_type( $localfile );
+        $fileLength = filesize($localfile);
+        $fileName = $localfile;
+        $fileContent = "";
+
+        $file_handle = fopen( $localfile , "r");
+        while (!feof($file_handle)) {
+            $fileContent = $fileContent.fread($file_handle,513);
+        }
+        fclose($file_handle);
+
+        $file_sha1 = sha1($fileContent);
+        $this->object->uploadFile("$fileName",$fileContent, $fileLength, $fileType, $result);
+        $httpCode = $this->getHttpCode($result);
+
+        return $httpCode;
     }
 
     public function recurseFolder($directory)
@@ -132,13 +141,48 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
 
     /**
      * @covers SinaStorageService::uploadFileRelax
-     * @todo   Implement testUploadFileRelax().
+     * @group uploadFileRelax
+     * @dataProvider uploadFileRelaxData
      */
-    public function testUploadFileRelax()
+    public function testUploadFileRelax($localfile, $expected)
     {
-        // Remove the following lines when you implement this test.
-        $this->markTestIncomplete(
-          'This test has not been implemented yet.'
+        $this->object->setCURLOPTs(array(CURLOPT_VERBOSE=>0));
+        $httpCode = $this->upSingleFile($localfile);
+
+        if ($httpCode != 200) {
+            echo "fail to upload $localfile";
+        }
+
+        $nameRelax = $localfile."Relax";
+        $fileContent = "";
+        $file_handle = fopen( $localfile , "r");
+        while (!feof($file_handle)) {
+            $fileContent = $fileContent.fread($file_handle,513);
+        }
+        fclose($file_handle);
+
+        if ( $expected != 200) {
+            $fileContent = "AddTimeInTheEnd--".date("U");
+            echo "\n\n".$fileContent."\n\n";
+        }
+
+        $file_sha1 = sha1($fileContent);
+        $fileLength = strlen($fileContent);
+
+        $this->object->setCURLOPTs(array(CURLOPT_VERBOSE=>1));
+        $this->object->uploadFileRelax("$nameRelax",$file_sha1, $fileLength, $result);
+        $httpCodeRelax = $this->getHttpCode($result);
+
+        $this->assertEquals( $expected, $httpCodeRelax);
+
+    }
+
+    public function uploadFileRelaxData()
+    {
+        return array(
+            array( 'file4UploadTest/pas.txt', 200),
+            array( 'file4UploadTest/afine.txt', 200),
+            array( 'file4UploadTest/afine.txt', 400)
         );
     }
 
@@ -166,8 +210,6 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
      * @covers SinaStorageService::copyFileBetweenProject
      * @group copyFileBetweenProject
      */
-    // create a function provide file uploaded in project
-    // because some tests require precondition that some files in server.
     public function testCopyFileBetweenProject()
     {
 
@@ -244,7 +286,6 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
 
         $c_result = curl_exec($c);
         $c_info = curl_getinfo($c);
-
         curl_close($c);
 
         $this->assertEquals($expected, $c_info['http_code']);
@@ -303,8 +344,9 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
      */
     public function testUpdateMeta($file,$expected)
     {
+        $timeNow = date("U");
         $this->object->setCURLOPTs(array(CURLOPT_HEADER=>1));
-        $this->object->setRequestHeaders(array("x-sina-info-int"=>33,"x-sina-info"=>"testing_$file"));
+        $this->object->setRequestHeaders(array("x-sina-info-int"=>$timeNow,"x-sina-info"=>"test_$file"));
         $this->object->updateMeta($file, $result);
         $httpCode = $this->getHttpCode($result);
 
@@ -376,25 +418,70 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
 
     /**
      * @covers SinaStorageService::setExtra
-     * @todo   Implement testSetExtra().
+     * @group setExtra
+     * @dataProvider setExtraData
      */
-    public function testSetExtra()
+    public function testSetExtra($extra)
     {
-        // Remove the following lines when you implement this test.
-        $this->markTestIncomplete(
-          'This test has not been implemented yet.'
+        $this->object->setExtra($extra);
+        $this->object->getFileUrl("foo/bar/1.html",$result);
+
+        $urlParts = explode("?",$result, 2);
+        $urlExtra = "?".substr($urlParts[1],0,strlen($extra)-1);
+
+        $this->assertEquals($extra, $urlExtra);
+    }
+
+    public function setExtraData()
+    {
+        return array(
+            array("?meta"),
+            array("?acl"),
+            array("?logging"),
+            array("?relax"),
+            array("?location")
         );
     }
 
     /**
      * @covers SinaStorageService::setQueryStrings
-     * @todo   Implement testSetQueryStrings().
+     * @group setQueryStrings
+     * @dataProvider setQueryStringsData
      */
-    public function testSetQueryStrings()
+    public function testSetQueryStrings($queryStr)
     {
-        // Remove the following lines when you implement this test.
-        $this->markTestIncomplete(
-          'This test has not been implemented yet.'
+        $this->object->setQueryStrings($queryStr);
+        $this->object->getFileUrl("foo/bar/1.html",$result);
+
+        $errFlag = false;
+        $urlQueryStrArr = explode("&",$result);
+        array_splice($urlQueryStrArr,0,1);
+
+        $urlQueryStr = array();
+        foreach ($urlQueryStrArr as $key) {
+            $temp = explode("=", $key, 2);
+            $urlQueryStr[$temp[0]] = $temp[1];
+        }
+
+        $intersection = array_intersect($urlQueryStr,$queryStr);
+        $this->assertEquals($queryStr, $intersection);
+    }
+
+    public function setQueryStringsData()
+    {
+        $qs1 = array(
+            'formatter' => 'json',
+            'marker' => 'makerVal',
+            'max-keys' => 10
+        );
+        $qs2 = array(
+            'doodle' => 'diagonal',
+            'orientation' => 'heaven'
+        );
+
+        return array(
+            array($qs1),
+            array($qs2)
         );
     }
 
@@ -412,16 +499,37 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
 
     /**
      * @covers SinaStorageService::setCURLOPTs
-     * @todo   Implement testSetCURLOPTs().
+     * @group setCURLOPTs
+     * @dataProvider setCURLOPTsData
      */
-    public function testSetCURLOPTs()
+    public function testSetCURLOPTs($curlOpt)
     {
-        // Remove the following lines when you implement this test.
-        $this->markTestIncomplete(
-          'This test has not been implemented yet.'
-        );
+        $this->object->setCURLOPTs($curlOpt);
+        $result = $this->object->getCURLOPTs();
+
+        if (!array_key_exists(CURLOPT_VERBOSE,$curlOpt)) {
+            unset($result[CURLOPT_VERBOSE]);
+        }
+        $this->assertEquals($curlOpt, $result);
     }
 
+    public function setCURLOPTsData()
+    {
+        $curlOpt1 = array(
+            CURLOPT_HEADER=>1,
+            CURLOPT_CONNECTTIMEOUT=>10,
+            CURLOPT_RETURNTRANSFER=>1
+        );
+        $curlOpt2 = array(
+            CURLOPT_VERBOSE=>True,
+            CURLOPT_TIMEOUT=>60
+        );
+
+        return array(
+            array($curlOpt1),
+            array($curlOpt2)
+        );
+    }
     /**
      * @covers SinaStorageService::setTimeout
      * @todo   Implement testSetTimeout().
@@ -448,16 +556,37 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
 
     /**
      * @covers SinaStorageService::getCURLOPTs
-     * @todo   Implement testGetCURLOPTs().
+     * @group getCURLOPTs
+     * @dataProvider getCURLOPTsData
      */
-    public function testGetCURLOPTs()
+    public function testGetCURLOPTs($curlOpt)
     {
-        // Remove the following lines when you implement this test.
-        $this->markTestIncomplete(
-          'This test has not been implemented yet.'
-        );
+        $this->object->setCURLOPTs($curlOpt);
+        $result = $this->object->getCURLOPTs();
+
+        if (!array_key_exists(CURLOPT_VERBOSE,$curlOpt)) {
+            unset($result[CURLOPT_VERBOSE]);
+        }
+        $this->assertEquals($curlOpt, $result);
     }
 
+    public function getCURLOPTsData()
+    {
+        $curlOpt1 = array(
+            CURLOPT_HEADER=>1,
+            CURLOPT_CONNECTTIMEOUT=>10,
+            CURLOPT_RETURNTRANSFER=>1
+        );
+        $curlOpt2 = array(
+            CURLOPT_VERBOSE=>True,
+            CURLOPT_TIMEOUT=>60
+        );
+
+        return array(
+            array($curlOpt1),
+            array($curlOpt2)
+        );
+    }
     /**
      * @covers SinaStorageService::purgeParams
      * @todo   Implement testPurgeParams().

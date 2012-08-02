@@ -56,11 +56,13 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
 
     /**
      * @covers SinaStorageService::getInstance
-     * @
+     * @group getInstance
      */
     public function testGetInstance()
     {
         //$o = SinaStorageService::getInstance($project, $accesskey, $secretkey);
+        //var_dump($this->object);
+        print_r($this->object);
     }
 
     public function getHttpCode($result)
@@ -394,26 +396,46 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
     }
     /**
      * @covers SinaStorageService::setAuth
-     * @todo   Implement testSetAuth().
+     * @group setAuth
      */
     public function testSetAuth()
     {
-        // Remove the following lines when you implement this test.
-        $this->markTestIncomplete(
-          'This test has not been implemented yet.'
-        );
+        $this->object->setAuth(false);
+        $this->object->getFileUrl("foo/bar/1.html",$result);
+        $uri = explode("?",$result,2);
+        $this->assertEmpty($uri[1],"setAuth does not work.");
+
+        $this->object->setAuth(true);
+        $this->object->getFileUrl("foo/bar/1.html",$result);
+        $uri = explode("?",$result,2);
+        $this->assertNotEmpty($uri[1],"setAuth does not work.");
     }
 
     /**
      * @covers SinaStorageService::setExpires
-     * @todo   Implement testSetExpires().
+     * @group setExpires
      */
     public function testSetExpires()
     {
-        // Remove the following lines when you implement this test.
-        $this->markTestIncomplete(
-          'This test has not been implemented yet.'
-        );
+        $this->object->setAuth(false);
+        $this->object->getFileUrl("foo/bar/1.html",$result);
+
+        $this->object->setAuth(true);
+        $this->object->setExpires(121);
+        $this->object->getFileUrl("foo/bar/1.html",$result);
+
+        $urlQueryStrArr = explode("&",$result);
+        array_splice($urlQueryStrArr,0,1);
+
+        $urlQueryStr = array();
+        foreach ($urlQueryStrArr as $key) {
+            $temp = explode("=", $key, 2);
+            $urlQueryStr[$temp[0]] = $temp[1];
+        }
+
+        $this->assertArrayHasKey("ssig", $urlQueryStr, "setExpires fail.");
+        $this->assertArrayHasKey("KID", $urlQueryStr, "setExpires fail.");
+        $this->assertArrayHasKey("Expires", $urlQueryStr, "setExpires fail.");
     }
 
     /**
@@ -453,7 +475,6 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
         $this->object->setQueryStrings($queryStr);
         $this->object->getFileUrl("foo/bar/1.html",$result);
 
-        $errFlag = false;
         $urlQueryStrArr = explode("&",$result);
         array_splice($urlQueryStrArr,0,1);
 
@@ -544,14 +565,17 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
 
     /**
      * @covers SinaStorageService::setDomain
-     * @todo   Implement testSetDomain().
+     * @group setDomain
      */
     public function testSetDomain()
     {
-        // Remove the following lines when you implement this test.
-        $this->markTestIncomplete(
-          'This test has not been implemented yet.'
-        );
+        $this->object->getFileUrl("foo/bar/1.html",$result);
+        $this->assertStringStartsWith("http://sinastorage.com/", $result);
+
+        $this->object->setDomain("http://IJustChangeTheDomain.com/");
+
+        $this->object->getFileUrl("foo/bar/1.html",$result);
+        $this->assertStringStartsWith("http://IJustChangeTheDomain.com/", $result);
     }
 
     /**
@@ -589,25 +613,101 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
     }
     /**
      * @covers SinaStorageService::purgeParams
-     * @todo   Implement testPurgeParams().
+     * @group purgeParams
+     * @dataProvider purgeParamsData
      */
-    public function testPurgeParams()
+    public function testPurgeParams($queryStr, $curlOpt, $requestHeader)
     {
-        // Remove the following lines when you implement this test.
-        $this->markTestIncomplete(
-          'This test has not been implemented yet.'
+        $this->object->setExpires(123);
+        $this->object->setExtra("?acl");
+        $this->object->setQueryStrings($queryStr);
+        $this->object->setCURLOPTs($curlOpt);
+        $this->object->setRequestHeaders($requestHeader);
+
+        $this->object->getFileUrl("foo/bar/1.html",$result);
+        $uri = explode("?",$result,2);
+        $getCurlOpt = $this->object->getCURLOPTs();
+        $this->assertNotEmpty($uri[1],"Fail to setExtra and setQueryStrings.");
+        $this->assertNotEmpty($getCurlOpt,"Fail to setCURLOPTs.");
+
+        $this->object->purgeParams();
+
+        $this->object->getFileUrl("foo/bar/1.html",$result);
+        $uri = explode("?",$result,2);
+        $getCurlOpt = $this->object->getCURLOPTs();
+        $this->assertEmpty($uri[1],"Fail to purgeParams.");
+        $this->assertEmpty($getCurlOpt,"Fail to purgeParams.");
+    }
+
+    public function purgeParamsData()
+    {
+        $queryStr = array(
+            'formatter' => 'json',
+            'marker' => 'makerVal',
+            'max-keys' => 10
+        );
+        $curlOpt = array(
+            CURLOPT_HEADER=>1,
+            CURLOPT_CONNECTTIMEOUT=>10,
+            CURLOPT_RETURNTRANSFER=>1
+        );
+        $requestHeader = array(
+            "Content-Type" => "text/plain",
+            "Content-Length" => "11",
+            "Content-MD5" => "XrY7u+Ae7tCTyyK7j1rNww=="
+        );
+        return array(
+            array($queryStr, $curlOpt, $requestHeader)
         );
     }
 
     /**
      * @covers SinaStorageService::purgeReq
-     * @todo   Implement testPurgeReq().
+     * @group purgeReq
+     * @dataProvider purgeReqData
      */
-    public function testPurgeReq()
+    public function testPurgeReq($queryStr, $curlOpt, $requestHeader)
     {
-        // Remove the following lines when you implement this test.
-        $this->markTestIncomplete(
-          'This test has not been implemented yet.'
+        $this->object->setExtra("?acl");
+        $this->object->setQueryStrings($queryStr);
+        $this->object->setCURLOPTs($curlOpt);
+        $this->object->setRequestHeaders($requestHeader);
+
+        $this->object->getFileUrl("foo/bar/1.html",$result);
+        $uri = explode("?",$result,2);
+        $getCurlOpt = $this->object->getCURLOPTs();
+        $this->assertNotEmpty($uri[1],"Fail to setExtra and setQueryStrings.");
+        $this->assertNotEmpty($getCurlOpt,"Fail to setCURLOPTs.");
+
+        $this->object->purgeReq();
+        $this->object->setAuth(false);
+
+        $this->object->getFileUrl("foo/bar/1.html",$result);
+        $uri = explode("?",$result,2);
+        $getCurlOpt = $this->object->getCURLOPTs();
+        $this->assertEmpty($uri[1],"Fail to purgeReq.");
+        $this->assertEmpty($getCurlOpt,"Fail to purgeReq.");
+    }
+
+    public function purgeReqData()
+    {
+        $queryStr = array(
+            'formatter' => 'json',
+            'marker' => 'makerVal',
+            'max-keys' => 10
+        );
+        $curlOpt = array(
+            CURLOPT_HEADER=>1,
+            CURLOPT_CONNECTTIMEOUT=>10,
+            CURLOPT_RETURNTRANSFER=>1
+        );
+        $requestHeader = array(
+            "Content-Type" => "text/plain",
+            "Content-Length" => "11",
+            "Content-MD5" => "XrY7u+Ae7tCTyyK7j1rNww=="
+        );
+        return array(
+            array($queryStr, $curlOpt, $requestHeader)
         );
     }
 }

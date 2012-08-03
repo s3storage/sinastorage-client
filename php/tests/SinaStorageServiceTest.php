@@ -32,8 +32,7 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
         $conf = $this->getConf();
         $this->object = SinaStorageService::getInstance($conf['project'],
                 $conf['accesskey'], $conf['secretkey']);
-        $this->object->purgeParams();
-        $this->object->purgeReq();
+        //move the two following statments to each test if necessary
         $this->object->setAuth(true);
         $this->object->setCURLOPTs(array(CURLOPT_VERBOSE=>1));
     }
@@ -44,7 +43,8 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
      */
     protected function tearDown()
     {
-
+        $this->object->purgeParams();
+        $this->object->purgeReq();
     }
 
     public function getConf()
@@ -57,12 +57,43 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
     /**
      * @covers SinaStorageService::getInstance
      * @group getInstance
+     * @dataProvider getInstanceData
      */
-    public function testGetInstance()
+    public function testGetInstance($conf1, $conf2)
     {
-        //$o = SinaStorageService::getInstance($project, $accesskey, $secretkey);
-        //var_dump($this->object);
-        print_r($this->object);
+        $this->object = SinaStorageService::getInstance
+                ($conf1['project'], $conf1['accesskey'], $conf1['secretkey']);
+        $this->object->setExtra("?log");
+        $firstSerConf1 = serialize($this->object);
+
+        $this->object = SinaStorageService::getInstance
+                ($conf1['project'], $conf1['accesskey'], $conf1['secretkey']);
+        $secondSerConf1 = serialize($this->object);
+
+        $this->assertEquals($firstSerConf1,$secondSerConf1);
+
+        $this->object = SinaStorageService::getInstance
+                ($conf2['project'], $conf2['accesskey'], $conf2['secretkey']);
+        $firstSerConf2 = serialize($this->object);
+
+        $this->assertNotEquals($firstSerConf1,$firstSerConf2);
+    }
+
+    public function getInstanceData()
+    {
+        $conf1 = array(
+            'project'=>'sandbox',
+            'accesskey'=>'SYS0000000000SANDBOX',
+            'secretkey'=>'1111111111111111111111111111111111111111'
+        );
+        $conf2 = array(
+            'project'=>'sandbox2',
+            'accesskey'=>'SYS0000000000SANDBOX',
+            'secretkey'=>'1111111111111111111111111111111111111111'
+        );
+        return array(
+            array($conf1,$conf2)
+        );
     }
 
     public function getHttpCode($result)
@@ -211,10 +242,24 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
     /**
      * @covers SinaStorageService::copyFileBetweenProject
      * @group copyFileBetweenProject
+     * @dataProvider copyFileBetweenProjectData
      */
-    public function testCopyFileBetweenProject()
+    public function testCopyFileBetweenProject($localfile, $expected)
     {
+        //code is right,but should test.....monday....
+        $this->object = SinaStorageService::getInstance
+                ("sandbox2","SYS0000000000SANDBOX","1111111111111111111111111111111111111111");
+        $httpCode = $this->upSingleFile($localfile);
+        if ($httpCode!=200) {
+            $this->markTestSkipped("Fail to upload Source File to be copied.");
+        }
 
+        $this->object = SinaStorageService::getInstance
+                ("yanhuihome","SYS0000000000SANDBOX","1111111111111111111111111111111111111111");
+        $this->object->copyFileBetweenProject($localfile, "sandbox2", $localfile, $result);
+        $copyResult = $this->getHttpCode($result);
+
+        $this->assertEquals($expected, $copyResult);
     }
 
     public function copyFileBetweenProjectData()

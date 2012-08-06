@@ -126,7 +126,6 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
         );
     }
 
-    //public function upSingleFile($localfile, $change = false)
     public function upSingleFile($localfile)
     {
         $fileType = mime_content_type( $localfile );
@@ -246,17 +245,19 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
      */
     public function testCopyFileBetweenProject($localfile, $expected)
     {
-        //code is right,but should test.....monday....
         $this->object = SinaStorageService::getInstance
-                ("sandbox2","SYS0000000000SANDBOX","1111111111111111111111111111111111111111");
+                ("yanhuihome","SYS0000000000SANDBOX","1111111111111111111111111111111111111111");
+        $this->object->setAuth(true);
+
         $httpCode = $this->upSingleFile($localfile);
         if ($httpCode!=200) {
             $this->markTestSkipped("Fail to upload Source File to be copied.");
         }
 
         $this->object = SinaStorageService::getInstance
-                ("yanhuihome","SYS0000000000SANDBOX","1111111111111111111111111111111111111111");
-        $this->object->copyFileBetweenProject($localfile, "sandbox2", $localfile, $result);
+                ("sandbox2","SYS0000000000SANDBOX","1111111111111111111111111111111111111111");
+        $this->object->setAuth(true);
+        $this->object->copyFileBetweenProject($localfile, "yanhuihome", $localfile, $result);
         $copyResult = $this->getHttpCode($result);
 
         $this->assertEquals($expected, $copyResult);

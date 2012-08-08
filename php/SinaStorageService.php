@@ -1,17 +1,17 @@
 <?php
 /**
  * SinaStorageService
- * 
+ *
  * @author: quyang1@staff.sina.com.cn
  * @date: 2011-05-05
  * @version: 0.1 Beta
  */
- 
+
 require_once("SinaService.php");
 
 /**
  * SinaStorageService Class
- * 
+ *
  * A encapsulation of SinaStorageService.
  * Client Docs: http://wiki.internal.sina.com.cn/moin//DAppCluster/DappClusterReadme2/DBA-Announce20110523
  * Original Docs: http://sinastorage.sinaapp.com/developer/interface/aws/operate_object.html
@@ -23,13 +23,13 @@ class SinaStorageService extends SinaService
 	const HTTP_STATUS_NO_CONTENT = 204;
 	
 	/**
-	 * The maximum number of seconds to allow CURL functions to execute. 
+	 * The maximum number of seconds to allow CURL functions to execute.
 	 */
 	const CURL_TIMEOUT = 3;
 	
 	/**
 	 * Singelton pool
-	 * 
+	 *
 	 * @var array of objects
 	 */
 	static $objects_pool;
@@ -86,7 +86,7 @@ class SinaStorageService extends SinaService
 	 *	The array should like this: 
 	 *		array(CURLOPT_HTTPHEADER=>1,CURLOPT_RETURNTRANSFER=>0);
 	 *	!!NOT!!:
-	 *		array("CURLOPT_HTTPHEADER"=>1,"CURLOPT_RETURNTRANSFER"=>0); 
+	 *		array("CURLOPT_HTTPHEADER"=>1,"CURLOPT_RETURNTRANSFER"=>0);
 	 */
 	protected $curlopts = array();
 	
@@ -106,7 +106,7 @@ class SinaStorageService extends SinaService
 	
 	/**
 	 * Get the singelton of this class.
-	 * 
+	 *
 	 * @param string $project  Project name.
 	 * @param string $access_key [optional]  The access_key.
 	 * @param string $secret_key [optional]  The secret_key.
@@ -130,7 +130,7 @@ class SinaStorageService extends SinaService
 	
 	/**
 	 * Upload file.
-	 * 
+	 *
 	 * @param string $dest_name  Destination file name.
 	 * @param string $file_content  
 	 * @param int $file_size
@@ -308,29 +308,50 @@ class SinaStorageService extends SinaService
 		list($result, $result_info) = $this->cURL($url, "GET");
 		return $result_info['http_code'] == self::HTTP_STATUS_OK;
 	}
-	
+
     /**
-	 * List files
-	 * @param string $marker
-	 * @param int $pageeach
-	 * @param string $prefix
-	 * @return array
-	 */
-	public function listFiles($marker, $pageeach, $prefix=''){
-		$url = self::$domain . $this->project . "/";
-		$query_strings = array(
-		'formatter' => 'json',
-		'marker' => $marker,
-		'max-keys' => $pageeach,
-		'prefix' => $prefix
-		);
-		$this->setQueryStrings($query_strings);
-		$res = $this->cURL($url, "GET");
-		if ($res[1]['http_code'] == self::HTTP_STATUS_OK)
-		{
-			return json_decode($res[0], true);
-		}
-	}
+     * List files
+     * @param string $marker
+     * @param int $pageeach
+     * @param string $prefix
+     * @return array
+     */
+    public function listFiles($marker, $pageeach, $prefix=''){
+        $url = self::$domain . $this->project . "/";
+        $query_strings = array(
+            'formatter' => 'json',
+            'marker' => $marker,
+            'max-keys' => $pageeach,
+            'prefix' => $prefix
+        );
+        $this->setQueryStrings($query_strings);
+        $res = $this->cURL($url, "GET");
+        if ($res[1]['http_code'] == self::HTTP_STATUS_OK)
+        {
+            return json_decode($res[0], true);
+        }
+    }
+
+    /**
+     * List files more verbosely, and return json format result
+     * @param string $marker
+     * @param int $pageeach
+     * @param string $prefix
+     * @param string &$result  Retrieved data.
+     * @return array
+     */
+    public function listProjectFiles($marker, $pageeach, $prefix='', &$result){
+        $url = self::$domain . $this->project . "/";
+        $query_strings = array(
+            'formatter' => 'json',
+            'marker' => $marker,
+            'max-keys' => $pageeach,
+            'prefix' => $prefix
+        );
+        $this->setQueryStrings($query_strings);
+        list($result, $result_info) = $this->cURL($url, "GET");
+        return $result_info['http_code'] == self::HTTP_STATUS_OK;
+    }
 
 	/**
 	 * Set if do authorization.
@@ -393,7 +414,15 @@ class SinaStorageService extends SinaService
 			$this->request_headers = $headers;
 		}
 	}
-	
+    /**
+    * Get request_headers
+     *
+     * @return array
+     */
+    public function getRequestHeaders()
+    {
+        return $this->request_headers;
+    }
 	/**
 	 * Custom set curlopt
 	 *
@@ -414,7 +443,7 @@ class SinaStorageService extends SinaService
 
 	public function setTimeout($timeout){
 		$this->setCURLOPTs(array(
-			CURLOPT_TIMEOUT => $timeout,
+			CURLOPT_TIMEOUT => $timeout
 		));	
 	}
 	
@@ -614,6 +643,5 @@ class SinaStorageService extends SinaService
 		return array($result,$result_info);
 	}
 }
-
 
 ?>

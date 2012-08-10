@@ -75,7 +75,6 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
 
         $this->obj = SinaStorageService::getInstance
                 ($conf2['project'], $conf2['accesskey'], $conf2['secretkey']);
-        var_dump($this->obj);
         $firstSerConf2 = serialize($this->obj);
 
         $this->assertNotEquals($firstSerConf1,$firstSerConf2);
@@ -97,15 +96,7 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
             array($conf1,$conf2)
         );
     }
-/*
-    public function getHttpCode($result)
-    {
-        $statLine = explode( " ", $result,4);
-        $httpCode = $statLine[1];
 
-        return $httpCode;
-    }
- */
     public function getHttpCode($result_info)
     {
         return $result_info['http_code'];
@@ -118,8 +109,6 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
      */
     public function testUploadFile($localfile, $expected)
     {
-        var_dump($this->obj);
-
         $httpCode = $this->upSingleFile($localfile);
         $this->assertEquals( $expected, $httpCode);
     }
@@ -152,31 +141,6 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
         return $httpCode;
     }
 
-    public function recurseFolder($directory)
-    {
-        $allFile = array();
-        if( substr($directory,-1,1) != "/" ){
-            $directory = "$directory/";
-        }
-
-        if( is_file( $directory )) {
-            throw new exception("Argument of recurseFolder() should be a string specifying a path");
-        }else{
-            $mydir=dir($directory);
-            while( $file=$mydir->read()){
-                if (($file!=".") AND ($file!="..") And ($file!= ".svn" ) And ($file!= ".git" )) {
-                    if (!is_file($directory.$file)) {
-                        echo $directory.$file." is not a file.\n";
-                        continue;
-                    }
-                    array_push($allFile, "$directory$file");
-                }
-            }
-            $mydir->close();
-        }
-        return $allFile;
-    }
-
     /**
      * @covers SinaStorageService::uploadFileRelax
      * @group uploadFileRelax
@@ -188,7 +152,7 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
         $httpCode = $this->upSingleFile($localfile);
 
         if ($httpCode != 200) {
-            echo "fail to upload $localfile";
+            $this->markTestSkipped("My debug message: Fail to upload $localfile");
         }
 
         $nameRelax = $localfile."Relax";
@@ -201,7 +165,6 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
 
         if ( $expected != 200) {
             $fileContent = "AddTimeInTheEnd--".date("U");
-            echo "\n\n".$fileContent."\n\n";
         }
 
         $file_sha1 = sha1($fileContent);
@@ -294,17 +257,13 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
 
         $this->obj->getFile( $filename, $result );
         $httpCode = $this->getHttpCode($this->obj->result_info);
-        //$httpCode = $this->getHttpCode($result);
-        var_dump($result);
         $this->assertEquals( $expected, $httpCode);
     }
 
     public function getFileData()
     {
-        $friend = "/file_uploaded/birth.txt";
         return array(
-            array( $friend, '', 200),
-            //array( '/file_uploaded/birth.txt', '', 200),
+            array( '/file_uploaded/birth.txt', '', 200),
             array( '/file_uploaded/nnn3.txt', '', 200),
             array( 'foo/bar/1.html', '219.142.118.237', 200),
             array( 'foo/bar/1.html', '229.152.128.247', 403),

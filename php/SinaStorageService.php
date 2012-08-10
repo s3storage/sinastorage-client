@@ -322,7 +322,7 @@ class SinaStorageService extends SinaService
             'formatter' => 'json',
             'marker' => $marker,
             'max-keys' => $pageeach,
-            'prefix' => $prefix
+            'prefix' => $prefix,
         );
         $this->setQueryStrings($query_strings);
         $res = $this->cURL($url, "GET");
@@ -340,13 +340,13 @@ class SinaStorageService extends SinaService
      * @param string &$result  Retrieved data.
      * @return array
      */
-    public function listProjectFiles($marker, $pageeach, $prefix='', &$result){
+    public function listProjectFiles($marker, $pageeach, $prefix, &$result){
         $url = self::$domain . $this->project . "/";
         $query_strings = array(
             'formatter' => 'json',
             'marker' => $marker,
             'max-keys' => $pageeach,
-            'prefix' => $prefix
+            'prefix' => $prefix,
         );
         $this->setQueryStrings($query_strings);
         list($result, $result_info) = $this->cURL($url, "GET");

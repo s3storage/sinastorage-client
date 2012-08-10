@@ -10,7 +10,7 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
      * @var SinaStorageService
      */
     protected $object;
-    protected $bafine;
+    protected $obj;
 
     public static function setUpBeforeClass()
     {
@@ -19,7 +19,7 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
 
     public static function tearDownAfterClass()
     {
-        // code...
+
     }
 
     /**
@@ -29,13 +29,13 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
     protected function setUp()
     {
         $conf = $this->getConf();
-        $this->object = SinaStorageService::getInstance($conf['project'],
+        $this->obj = SinaStorageService::getInstance($conf['project'],
                 $conf['accesskey'], $conf['secretkey']);
-        $this->object->purgeParams();
-        $this->object->purgeReq();
+        $this->obj->purgeParams();
+        $this->obj->purgeReq();
         //move the two following statments to each test if necessary
-        $this->object->setAuth(true);
-        $this->object->setCURLOPTs(array(CURLOPT_VERBOSE=>1));
+        $this->obj->setAuth(true);
+        //$this->obj->setCURLOPTs(array(CURLOPT_VERBOSE=>1));
     }
 
     /**
@@ -44,8 +44,8 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
      */
     protected function tearDown()
     {
-        $this->object->purgeParams();
-        $this->object->purgeReq();
+        $this->obj->purgeParams();
+        $this->obj->purgeReq();
     }
 
     public function getConf()
@@ -62,21 +62,21 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
      */
     public function testGetInstance($conf1, $conf2)
     {
-        $this->object = SinaStorageService::getInstance
+        $this->obj = SinaStorageService::getInstance
                 ($conf1['project'], $conf1['accesskey'], $conf1['secretkey']);
-        $this->object->setExtra("?log");
-        $firstSerConf1 = serialize($this->object);
+        $this->obj->setExtra("?log");
+        $firstSerConf1 = serialize($this->obj);
 
-        $this->object = SinaStorageService::getInstance
+        $this->obj = SinaStorageService::getInstance
                 ($conf1['project'], $conf1['accesskey'], $conf1['secretkey']);
-        $secondSerConf1 = serialize($this->object);
+        $secondSerConf1 = serialize($this->obj);
 
         $this->assertEquals($firstSerConf1,$secondSerConf1);
 
-        $this->object = SinaStorageService::getInstance
+        $this->obj = SinaStorageService::getInstance
                 ($conf2['project'], $conf2['accesskey'], $conf2['secretkey']);
-        var_dump($this->object);
-        $firstSerConf2 = serialize($this->object);
+        var_dump($this->obj);
+        $firstSerConf2 = serialize($this->obj);
 
         $this->assertNotEquals($firstSerConf1,$firstSerConf2);
     }
@@ -97,13 +97,18 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
             array($conf1,$conf2)
         );
     }
-
+/*
     public function getHttpCode($result)
     {
         $statLine = explode( " ", $result,4);
         $httpCode = $statLine[1];
 
         return $httpCode;
+    }
+ */
+    public function getHttpCode($result_info)
+    {
+        return $result_info['http_code'];
     }
 
     /**
@@ -113,7 +118,7 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
      */
     public function testUploadFile($localfile, $expected)
     {
-        var_dump($this->object);
+        var_dump($this->obj);
 
         $httpCode = $this->upSingleFile($localfile);
         $this->assertEquals( $expected, $httpCode);
@@ -141,8 +146,8 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
         fclose($file_handle);
 
         $file_sha1 = sha1($fileContent);
-        $this->object->uploadFile("$fileName",$fileContent, $fileLength, $fileType, $result);
-        $httpCode = $this->getHttpCode($result);
+        $this->obj->uploadFile("$fileName",$fileContent, $fileLength, $fileType, $result);
+        $httpCode = $this->getHttpCode($this->obj->result_info);
 
         return $httpCode;
     }
@@ -179,7 +184,7 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
      */
     public function testUploadFileRelax($localfile, $expected)
     {
-        $this->object->setCURLOPTs(array(CURLOPT_VERBOSE=>0));
+        $this->obj->setCURLOPTs(array(CURLOPT_VERBOSE=>0));
         $httpCode = $this->upSingleFile($localfile);
 
         if ($httpCode != 200) {
@@ -202,9 +207,9 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
         $file_sha1 = sha1($fileContent);
         $fileLength = strlen($fileContent);
 
-        $this->object->setCURLOPTs(array(CURLOPT_VERBOSE=>1));
-        $this->object->uploadFileRelax("$nameRelax",$file_sha1, $fileLength, $result);
-        $httpCodeRelax = $this->getHttpCode($result);
+        $this->obj->setCURLOPTs(array(CURLOPT_VERBOSE=>1));
+        $this->obj->uploadFileRelax("$nameRelax",$file_sha1, $fileLength, $result);
+        $httpCodeRelax = $this->getHttpCode($this->obj->result_info);
 
         $this->assertEquals( $expected, $httpCodeRelax);
 
@@ -232,8 +237,8 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
         }
 
         $dest = "copied/".array_pop(explode("/",$src,2));
-        $this->object->copyFile($dest, $src, $result);
-        $httpCode = $this->getHttpCode($result);
+        $this->obj->copyFile($dest, $src, $result);
+        $httpCode = $this->getHttpCode($this->obj->result_info);
         $this->assertEquals($expected, $httpCode);
     }
 
@@ -251,20 +256,20 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
      */
     public function testCopyFileBetweenProject($localfile, $expected)
     {
-        $this->object = SinaStorageService::getInstance
+        $this->obj = SinaStorageService::getInstance
                 ("yanhuihome","SYS0000000000SANDBOX","1111111111111111111111111111111111111111");
-        $this->object->setAuth(true);
+        $this->obj->setAuth(true);
 
         $httpCode = $this->upSingleFile($localfile);
         if ($httpCode!=200) {
             $this->markTestSkipped("Fail to upload Source File to be copied.");
         }
 
-        $this->object = SinaStorageService::getInstance
+        $this->obj = SinaStorageService::getInstance
                 ("sandbox2","SYS0000000000SANDBOX","1111111111111111111111111111111111111111");
-        $this->object->setAuth(true);
-        $this->object->copyFileBetweenProject($localfile, "yanhuihome", $localfile, $result);
-        $copyResult = $this->getHttpCode($result);
+        $this->obj->setAuth(true);
+        $this->obj->copyFileBetweenProject($localfile, "yanhuihome", $localfile, $result);
+        $copyResult = $this->getHttpCode($this->obj->result_info);
 
         $this->assertEquals($expected, $copyResult);
     }
@@ -283,13 +288,14 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
      */
     public function testGetFile( $filename, $ip, $expected)
     {
-        $this->object->setCURLOPTs(array(CURLOPT_HEADER=>1));
         if ( $ip ) {
-            $this->object->setExtra("?ip=$ip");
+            $this->obj->setExtra("?ip=$ip");
         }
 
-        $this->object->getFile( $filename, $result );
-        $httpCode = $this->getHttpCode($result);
+        $this->obj->getFile( $filename, $result );
+        $httpCode = $this->getHttpCode($this->obj->result_info);
+        //$httpCode = $this->getHttpCode($result);
+        var_dump($result);
         $this->assertEquals( $expected, $httpCode);
     }
 
@@ -326,10 +332,10 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
     public function testGetFileUrl($file, $ip, $expected)
     {
         if ( $ip ) {
-            $this->object->setExtra("?ip=$ip");
+            $this->obj->setExtra("?ip=$ip");
         }
 
-        $this->object->getFileUrl($file, $result);
+        $this->obj->getFileUrl($file, $result);
 
         $c = curl_init();
         curl_setopt($c, CURLOPT_URL, $result);
@@ -363,9 +369,8 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
      */
     public function testDeleteFile( $file, $expected)
     {
-        $this->object->setCURLOPTs(array(CURLOPT_HEADER=>1));
-        $this->object->deleteFile( $file, $result);
-        $httpCode = $this->getHttpCode($result);
+        $this->obj->deleteFile( $file, $result);
+        $httpCode = $this->getHttpCode($this->obj->result_info);
 
         $this->assertEquals( $expected, $httpCode);
     }
@@ -385,9 +390,8 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
      */
     public function testGetMeta($file, $expected)
     {
-        $this->object->setCURLOPTs(array(CURLOPT_HEADER=>1));
-        $this->object->getMeta($file,$result);
-        $httpCode = $this->getHttpCode($result);
+        $this->obj->getMeta($file,$result);
+        $httpCode = $this->getHttpCode($this->obj->result_info);
         $this->assertEquals($expected,$httpCode);
     }
 
@@ -399,10 +403,9 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
     public function testUpdateMeta($file,$expected)
     {
         $timeNow = date("U");
-        $this->object->setCURLOPTs(array(CURLOPT_HEADER=>1));
-        $this->object->setRequestHeaders(array("x-sina-info-int"=>$timeNow,"x-sina-info"=>"test_$file"));
-        $this->object->updateMeta($file, $result);
-        $httpCode = $this->getHttpCode($result);
+        $this->obj->setRequestHeaders(array("x-sina-info-int"=>$timeNow,"x-sina-info"=>"test_$file"));
+        $this->obj->updateMeta($file, $result);
+        $httpCode = $this->getHttpCode($this->obj->result_info);
 
         $this->assertEquals($expected, $httpCode);
     }
@@ -413,9 +416,8 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
      */
     public function testGetFileList()
     {
-        $this->object->setCURLOPTs(array(CURLOPT_HEADER=>1));
-        $this->object->getFileList($result);
-        $httpCode = $this->getHttpCode($result);
+        $this->obj->getFileList($result);
+        $httpCode = $this->getHttpCode($this->obj->result_info);
         $this->assertEquals(200,$httpCode);
     }
 
@@ -426,7 +428,7 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
      */
     public function testListFiles($marker, $pageeach)
     {
-        $result = $this->object->listFiles($marker, $pageeach, "");
+        $result = $this->obj->listFiles($marker, $pageeach, "");
 
         $this->assertEquals($marker, $result["Marker"]);
         $this->assertGreaterThan($marker, $result["Contents"][0]["Name"]);
@@ -446,16 +448,14 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
      * @group listProjectFiles
      * @dataProvider listProjectFilesData
      */
-    public function testListProjectFiles($marker, $pageeach, $expected)
+    public function testListProjectFiles($marker, $pageeach, $prefix, $expected)
     {
-        $this->object->setCURLOPTs(array(CURLOPT_HEADER=>1));
-        $this->object->listProjectFiles($marker, $pageeach, "", $result);
+        $this->obj->listProjectFiles($marker, $pageeach, $prefix, $result);
 
-        $httpCode = $this->getHttpCode($result);
+        $httpCode = $this->getHttpCode($this->obj->result_info);
         $this->assertEquals($expected, $httpCode);
 
-        $w = explode("\r\n\r\n", $result);
-        $resultArr = json_decode($w[1], true);
+        $resultArr = json_decode($result, true);
         $this->assertEquals($marker, $resultArr["Marker"]);
         $this->assertGreaterThan($marker, $resultArr["Contents"][0]["Name"]);
         $this->assertEquals($pageeach, $resultArr["ContentsQuantity"]);
@@ -464,8 +464,9 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
     public function listProjectFilesData()
     {
         return array(
-            array( 'foo/bar/1.html', 10, 200),
-            array( 'file4UploadTest/afine.txt', 5, 200)
+            array( 'foo/bar/1.html', 10, "",200),
+            array( 'foo/bar/1.html', 10, "foo/bar",200),
+            array( 'file4UploadTest/afine.txt', 5, "",200)
         );
     }
 
@@ -475,13 +476,13 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
      */
     public function testSetAuth()
     {
-        $this->object->setAuth(false);
-        $this->object->getFileUrl("foo/bar/1.html",$result);
+        $this->obj->setAuth(false);
+        $this->obj->getFileUrl("foo/bar/1.html",$result);
         $uri = explode("?",$result,2);
         $this->assertEmpty($uri[1],"setAuth does not work.");
 
-        $this->object->setAuth(true);
-        $this->object->getFileUrl("foo/bar/1.html",$result);
+        $this->obj->setAuth(true);
+        $this->obj->getFileUrl("foo/bar/1.html",$result);
         $uri = explode("?",$result,2);
         $this->assertNotEmpty($uri[1],"setAuth does not work.");
     }
@@ -492,12 +493,12 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
      */
     public function testSetExpires()
     {
-        $this->object->setAuth(false);
-        $this->object->getFileUrl("foo/bar/1.html",$result);
+        $this->obj->setAuth(false);
+        $this->obj->getFileUrl("foo/bar/1.html",$result);
 
-        $this->object->setAuth(true);
-        $this->object->setExpires(121);
-        $this->object->getFileUrl("foo/bar/1.html",$result);
+        $this->obj->setAuth(true);
+        $this->obj->setExpires(121);
+        $this->obj->getFileUrl("foo/bar/1.html",$result);
 
         $urlQueryStrArr = explode("&",$result);
         array_splice($urlQueryStrArr,0,1);
@@ -520,8 +521,8 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
      */
     public function testSetExtra($extra)
     {
-        $this->object->setExtra($extra);
-        $this->object->getFileUrl("foo/bar/1.html",$result);
+        $this->obj->setExtra($extra);
+        $this->obj->getFileUrl("foo/bar/1.html",$result);
 
         $urlParts = explode("?",$result, 2);
         $urlExtra = "?".substr($urlParts[1],0,strlen($extra)-1);
@@ -547,8 +548,8 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
      */
     public function testSetQueryStrings($queryStr)
     {
-        $this->object->setQueryStrings($queryStr);
-        $this->object->getFileUrl("foo/bar/1.html",$result);
+        $this->obj->setQueryStrings($queryStr);
+        $this->obj->getFileUrl("foo/bar/1.html",$result);
 
         $urlQueryStrArr = explode("&",$result);
         array_splice($urlQueryStrArr,0,1);
@@ -588,8 +589,8 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
      */
     public function testSetRequestHeaders($reqHeader)
     {
-        $this->object->setRequestHeaders($reqHeader);
-        $reqHeaderGot = $this->object->getRequestHeaders();
+        $this->obj->setRequestHeaders($reqHeader);
+        $reqHeaderGot = $this->obj->getRequestHeaders();
 
         $this->assertEquals($reqHeader, $reqHeaderGot);
     }
@@ -619,11 +620,11 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
      */
     public function testGetRequestHeaders($reqHeader)
     {
-        $reqHeaderGot = $this->object->getRequestHeaders();
+        $reqHeaderGot = $this->obj->getRequestHeaders();
         $this->assertEmpty($reqHeaderGot);
 
-        $this->object->setRequestHeaders($reqHeader);
-        $reqHeaderGot = $this->object->getRequestHeaders();
+        $this->obj->setRequestHeaders($reqHeader);
+        $reqHeaderGot = $this->obj->getRequestHeaders();
         $this->assertEquals($reqHeader,$reqHeaderGot);
     }
 
@@ -652,8 +653,8 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
      */
     public function testSetCURLOPTs($curlOpt)
     {
-        $this->object->setCURLOPTs($curlOpt);
-        $result = $this->object->getCURLOPTs();
+        $this->obj->setCURLOPTs($curlOpt);
+        $result = $this->obj->getCURLOPTs();
 
         if (!array_key_exists(CURLOPT_VERBOSE,$curlOpt)) {
             unset($result[CURLOPT_VERBOSE]);
@@ -686,9 +687,9 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
      */
     public function testSetTimeout($timeout)
     {
-        $this->object->setDomain("http://gz.sinastorage.com/");
-        $this->object->setTimeout($timeout);
-        $curlOpts = $this->object->getCURLOPTs();
+        $this->obj->setDomain("http://gz.sinastorage.com/");
+        $this->obj->setTimeout($timeout);
+        $curlOpts = $this->obj->getCURLOPTs();
 
         $this->assertEquals( $timeout, $curlOpts[CURLOPT_TIMEOUT]);
     }
@@ -707,12 +708,12 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
      */
     public function testSetDomain()
     {
-        $this->object->getFileUrl("foo/bar/1.html",$result);
+        $this->obj->getFileUrl("foo/bar/1.html",$result);
         $this->assertStringStartsWith("http://sinastorage.com/", $result);
 
-        $this->object->setDomain("http://IJustChangeTheDomain.com/");
+        $this->obj->setDomain("http://IJustChangeTheDomain.com/");
 
-        $this->object->getFileUrl("foo/bar/1.html",$result);
+        $this->obj->getFileUrl("foo/bar/1.html",$result);
         $this->assertStringStartsWith("http://IJustChangeTheDomain.com/", $result);
     }
 
@@ -723,8 +724,8 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
      */
     public function testGetCURLOPTs($curlOpt)
     {
-        $this->object->setCURLOPTs($curlOpt);
-        $result = $this->object->getCURLOPTs();
+        $this->obj->setCURLOPTs($curlOpt);
+        $result = $this->obj->getCURLOPTs();
 
         if (!array_key_exists(CURLOPT_VERBOSE,$curlOpt)) {
             unset($result[CURLOPT_VERBOSE]);
@@ -756,23 +757,23 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
      */
     public function testPurgeParams($queryStr, $curlOpt, $requestHeader)
     {
-        $this->object->setExpires(123);
-        $this->object->setExtra("?acl");
-        $this->object->setQueryStrings($queryStr);
-        $this->object->setCURLOPTs($curlOpt);
-        $this->object->setRequestHeaders($requestHeader);
+        $this->obj->setExpires(123);
+        $this->obj->setExtra("?acl");
+        $this->obj->setQueryStrings($queryStr);
+        $this->obj->setCURLOPTs($curlOpt);
+        $this->obj->setRequestHeaders($requestHeader);
 
-        $this->object->getFileUrl("foo/bar/1.html",$result);
+        $this->obj->getFileUrl("foo/bar/1.html",$result);
         $uri = explode("?",$result,2);
-        $getCurlOpt = $this->object->getCURLOPTs();
+        $getCurlOpt = $this->obj->getCURLOPTs();
         $this->assertNotEmpty($uri[1],"Fail to setExtra and setQueryStrings.");
         $this->assertNotEmpty($getCurlOpt,"Fail to setCURLOPTs.");
 
-        $this->object->purgeParams();
+        $this->obj->purgeParams();
 
-        $this->object->getFileUrl("foo/bar/1.html",$result);
+        $this->obj->getFileUrl("foo/bar/1.html",$result);
         $uri = explode("?",$result,2);
-        $getCurlOpt = $this->object->getCURLOPTs();
+        $getCurlOpt = $this->obj->getCURLOPTs();
         $this->assertEmpty($uri[1],"Fail to purgeParams.");
         $this->assertEmpty($getCurlOpt,"Fail to purgeParams.");
     }
@@ -806,23 +807,23 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
      */
     public function testPurgeReq($queryStr, $curlOpt, $requestHeader)
     {
-        $this->object->setExtra("?acl");
-        $this->object->setQueryStrings($queryStr);
-        $this->object->setCURLOPTs($curlOpt);
-        $this->object->setRequestHeaders($requestHeader);
+        $this->obj->setExtra("?acl");
+        $this->obj->setQueryStrings($queryStr);
+        $this->obj->setCURLOPTs($curlOpt);
+        $this->obj->setRequestHeaders($requestHeader);
 
-        $this->object->getFileUrl("foo/bar/1.html",$result);
+        $this->obj->getFileUrl("foo/bar/1.html",$result);
         $uri = explode("?",$result,2);
-        $getCurlOpt = $this->object->getCURLOPTs();
+        $getCurlOpt = $this->obj->getCURLOPTs();
         $this->assertNotEmpty($uri[1],"Fail to setExtra and setQueryStrings.");
         $this->assertNotEmpty($getCurlOpt,"Fail to setCURLOPTs.");
 
-        $this->object->purgeReq();
-        $this->object->setAuth(false);
+        $this->obj->purgeReq();
+        $this->obj->setAuth(false);
 
-        $this->object->getFileUrl("foo/bar/1.html",$result);
+        $this->obj->getFileUrl("foo/bar/1.html",$result);
         $uri = explode("?",$result,2);
-        $getCurlOpt = $this->object->getCURLOPTs();
+        $getCurlOpt = $this->obj->getCURLOPTs();
         $this->assertEmpty($uri[1],"Fail to purgeReq.");
         $this->assertEmpty($getCurlOpt,"Fail to purgeReq.");
     }

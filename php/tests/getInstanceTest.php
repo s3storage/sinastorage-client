@@ -1,5 +1,5 @@
 <?php
-require('../SinaStorageService.php');
+require_once('../SinaStorageService.php');
 
 class getInstanceTest extends PHPUnit_Framework_TestCase
 {

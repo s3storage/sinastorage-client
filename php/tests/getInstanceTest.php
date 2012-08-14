@@ -1,7 +1,4 @@
 <?php
-//ini_set('include_path', 'dirname(__FILE__)');
-//require('SinaStorageService.php');
-//require(dirname(__FILE__).'/../SinaStorageService.php');
 require('../SinaStorageService.php');
 
 class getInstanceTest extends PHPUnit_Framework_TestCase

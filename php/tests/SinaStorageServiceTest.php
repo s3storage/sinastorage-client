@@ -29,8 +29,9 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
     protected function setUp()
     {
         $conf = $this->getConf();
-        $this->obj = SinaStorageService::getInstance($conf['project'],
-                $conf['accesskey'], $conf['secretkey']);
+        $this->obj = SinaStorageService::getInstance(
+            $conf['project'],$conf['accesskey'], $conf['secretkey']
+        );
         $this->obj->purgeParams();
         $this->obj->purgeReq();
         $this->obj->setAuth(true);
@@ -142,8 +143,9 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
      */
     public function testCopyFileBetweenProject($localfile, $expected)
     {
-        $this->obj = SinaStorageService::getInstance
-                ("yanhuihome","SYS0000000000SANDBOX","1111111111111111111111111111111111111111");
+        $this->obj = SinaStorageService::getInstance(
+            "yanhuihome","SYS0000000000SANDBOX","1111111111111111111111111111111111111111"
+        );
         $this->obj->setAuth(true);
 
         $httpCode = $this->upSingleFile($localfile);
@@ -151,8 +153,9 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
             $this->markTestSkipped("Fail to upload Source File to be copied.");
         }
 
-        $this->obj = SinaStorageService::getInstance
-                ("sandbox2","SYS0000000000SANDBOX","1111111111111111111111111111111111111111");
+        $this->obj = SinaStorageService::getInstance(
+            "sandbox2","SYS0000000000SANDBOX","1111111111111111111111111111111111111111"
+        );
         $this->obj->setAuth(true);
         $this->obj->copyFileBetweenProject($localfile, "yanhuihome", $localfile, $result);
         $copyResult = $this->getHttpCode($this->obj->result_info);
@@ -746,8 +749,11 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
 
     public function getConf()
     {
-        $conf = array('project'=>'sandbox', 'accesskey'=>'SYS0000000000SANDBOX',
-                 'secretkey'=>'1111111111111111111111111111111111111111');
+        $conf = array(
+            'project'=>'sandbox',
+            'accesskey'=>'SYS0000000000SANDBOX',
+            'secretkey'=>'1111111111111111111111111111111111111111'
+        );
         return $conf;
     }
 

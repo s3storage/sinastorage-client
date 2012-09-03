@@ -12,16 +12,18 @@ class getInstanceTest extends PHPUnit_Framework_TestCase
      */
     public function testGetInstance($conf1)
     {
-        $this->obj = SinaStorageService::getInstance
-                ($conf1['project']);
+        $this->obj = SinaStorageService::getInstance(
+            $conf1['project']
+        );
         $this->obj->getFile("foo/bar/1.html", $result);
         $httpCode = $this->obj->result_info['http_code'];
         $this->assertEquals( 200, $httpCode);
         $this->obj->result_info = null;
         $firstSerConf1 = serialize($this->obj);
 
-        $this->obj = SinaStorageService::getInstance
-                ($conf1['project'], $conf1['accesskey'], $conf1['secretkey']);
+        $this->obj = SinaStorageService::getInstance(
+            $conf1['project'], $conf1['accesskey'], $conf1['secretkey']
+        );
         $this->obj->getFile("foo/bar/1.html", $result);
         $httpCode = $this->obj->result_info['http_code'];
         $this->assertEquals( 200, $httpCode);
@@ -31,18 +33,21 @@ class getInstanceTest extends PHPUnit_Framework_TestCase
 
         $this->obj->setExtra("?log");
         $thirdSerConf1 = serialize($this->obj);
-        $this->obj = SinaStorageService::getInstance
-                ($conf1['project'], $conf1['accesskey'], $conf1['secretkey']);
+        $this->obj = SinaStorageService::getInstance(
+            $conf1['project'], $conf1['accesskey'], $conf1['secretkey']
+        );
         $forthSerConf1 = serialize($this->obj);
         $this->assertEquals($thirdSerConf1, $forthSerConf1);
 
-        $this->obj = SinaStorageService::getInstance
-                ($conf1['project'], $conf1['accesskey'], $conf1['secretkey'], true);
+        $this->obj = SinaStorageService::getInstance(
+            $conf1['project'], $conf1['accesskey'], $conf1['secretkey'], true
+        );
         $fifthSerConf1 = serialize($this->obj);
         $this->assertNotEquals($thirdSerConf1, $fifthSerConf1);
 
-        $this->obj = SinaStorageService::getInstance
-                ($conf1['project'], $conf1['accesskey'], $conf1['secretkey'], true);
+        $this->obj = SinaStorageService::getInstance(
+            $conf1['project'], $conf1['accesskey'], $conf1['secretkey'], true
+        );
         $this->obj->setAuth(true);
         $this->obj->getFile("foo/bar/1.html", $result);
         $httpCode = $this->obj->result_info['http_code'];

@@ -141,7 +141,7 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
      * @group copyFileBetweenProject
      * @dataProvider copyFileBetweenProjectData
      */
-    public function testCopyFileBetweenProject($localfile, $expected)
+    public function testCopyFileBetweenProject($localfile, $expected, $getMethodExpected)
     {
         $this->obj = SinaStorageService::getInstance(
             "yanhuihome","SYS0000000000SANDBOX","1111111111111111111111111111111111111111"
@@ -161,13 +161,17 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
         $copyResult = $this->getHttpCode($this->obj->result_info);
 
         $this->assertEquals($expected, $copyResult);
+
+        $this->obj->getFile($localfile, $result);
+        $getResult = $this->getHttpCode($this->obj->result_info);
+        $this->assertEquals($getMethodExpected, $getResult);
     }
 
     public function copyFileBetweenProjectData()
     {
         return array(
-            array( 'file4UploadTest/pas.txt', 200),
-            array( 'file4UploadTest/afine.txt', 200)
+            array( 'file4UploadTest/pas.txt', 200, 200),
+            array( 'file4UploadTest/afine.txt', 200, 200)
         );
     }
     /**

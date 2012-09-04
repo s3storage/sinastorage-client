@@ -34,7 +34,7 @@ class SinaStorageService extends SinaService
 	 */
 	static $objects_pool;
 
-    public $result_info;
+        public $result_info;
 
 	private $project;
 	private $access_key;
@@ -151,8 +151,7 @@ class SinaStorageService extends SinaService
 			CURLOPT_POSTFIELDS	=>	$file_content,
 			CURLOPT_HEADER		=>	1,
 		));
-		list($result, $this->result_info) = $this->cURL($url, "PUT");
-		return $this->result_info['http_code'] == self::HTTP_STATUS_OK;
+                return $this->doCURL($url, "PUT", &$result);
 	}
 	
 	/**
@@ -178,8 +177,7 @@ class SinaStorageService extends SinaService
 		$this->setCURLOPTs(array(
 			CURLOPT_HEADER		=>	1,
 		));
-		list($result, $this->result_info) = $this->cURL($url, "PUT");
-		return $this->result_info['http_code'] == self::HTTP_STATUS_OK;
+                return $this->doCURL($url, "PUT", &$result);
 	}
 	
 	/**
@@ -202,8 +200,7 @@ class SinaStorageService extends SinaService
 		$this->setCURLOPTs(array(
 			CURLOPT_HEADER		=>	1,
 		));
-		list($result, $this->result_info) = $this->cURL($url, "PUT");
-		return $this->result_info['http_code'] == self::HTTP_STATUS_OK;
+                return $this->doCURL($url, "PUT", &$result);
 	}
 
        /** 
@@ -221,14 +218,13 @@ class SinaStorageService extends SinaService
                 $url = self::$domain . $this->project . "/" . $dest_name;
                 if($this->extra == "?"){
                         $this->setExtra("?copy");
-                }   
+                }
                 $this->request_headers['Content-Length'] = 0;
                 $this->request_headers['x-amz-copy-source'] = "/" . $src_proj . "/" . $src_name;
                 $this->setCURLOPTs(array(
-                        CURLOPT_HEADER          =>      1,  
-                )); 
-                list($result, $this->result_info) = $this->cURL($url, "PUT");
-                return $this->result_info['http_code'] == self::HTTP_STATUS_OK;
+                        CURLOPT_HEADER          =>      1,
+                ));
+                return $this->doCURL($url, "PUT", &$result);
         }   
 	
 	/**
@@ -240,8 +236,7 @@ class SinaStorageService extends SinaService
 	 */
 	public function getFile($dest_name, &$result){
 		$url = self::$domain . $this->project . "/" . $dest_name;
-		list($result, $this->result_info) = $this->cURL($url, "GET");
-		return $this->result_info['http_code'] == self::HTTP_STATUS_OK;
+                return $this->doCURL($url, "GET", &$result);
 	}
 	
 	/**
@@ -268,15 +263,13 @@ class SinaStorageService extends SinaService
 	 */
 	public function deleteFile($dest_name, &$result = NULL){
 		$url = self::$domain . $this->project . "/" . $dest_name;
-		list($result, $this->result_info) = $this->cURL($url, "DELETE");
-		return $this->result_info['http_code'] == self::HTTP_STATUS_NO_CONTENT;
+                return $this->doCURL($url, "DELETE", &$result, self::HTTP_STATUS_NO_CONTENT);
         }
 
 	public function getMeta($dest_name, &$result){
 		$url = self::$domain . $this->project . "/" . $dest_name;
 		$this->setExtra("?meta");
-		list($result, $this->result_info) = $this->cURL($url, "GET");
-		return $this->result_info['http_code'] == self::HTTP_STATUS_OK;
+                return $this->doCURL($url, "GET", &$result);
 	}
 	
 	/**
@@ -292,8 +285,7 @@ class SinaStorageService extends SinaService
 		if($this->extra == "?"){
 			$this->setExtra("?meta");
 		}
-		list($result, $this->result_info) = $this->cURL($url, "PUT");
-		return $this->result_info['http_code'] == self::HTTP_STATUS_OK;		
+                return $this->doCURL($url, "PUT", &$result);
 	}
 	
 	/**
@@ -307,8 +299,7 @@ class SinaStorageService extends SinaService
 		if($this->extra == "?"){
 			$this->setExtra("?formatter=json");                   
 		} 
-		list($result, $this->result_info) = $this->cURL($url, "GET");
-		return $this->result_info['http_code'] == self::HTTP_STATUS_OK;
+                return $this->doCURL($url, "GET", &$result);
 	}
 
     /**
@@ -351,8 +342,7 @@ class SinaStorageService extends SinaService
             'prefix' => $prefix,
         );
         $this->setQueryStrings($query_strings);
-        list($result, $this->result_info) = $this->cURL($url, "GET");
-        return $this->result_info['http_code'] == self::HTTP_STATUS_OK;
+        return $this->doCURL($url, "GET", &$result);
     }
 
 	/**
@@ -484,7 +474,12 @@ class SinaStorageService extends SinaService
 		$this->curlopts 	= array();
 		self::$domain = "http://sinastorage.com/";
 	}
-	
+
+        protected function doCURL($url, $method, &$result = NULL, $httpCode = self::HTTP_STATUS_OK){
+            list($result, $this->result_info) = $this->cURL($url, $method);
+            return $this->result_info['http_code'] == $httpCode;
+        }
+
 	/**
 	 * Signature for authorization.
 	 * 

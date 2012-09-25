@@ -605,9 +605,9 @@ class SinaStorageService extends SinaService
 		
 		if($this->need_auth){
 			$resource = str_replace(self::$domain, "/", $url);
-			$this->expires = $this->expires > 0 ? $this->expires : time() + 7200;
-			list($ssig, $KID) = $this->signatureHeader($type, $resource, $this->expires);
-			$url .= sprintf("&ssig=%s&KID=%s&Expires=%d", urlencode($ssig), $KID, $this->expires);
+			$exp = $this->expires > 0 ? $this->expires : time() + 7200;
+			list($ssig, $KID) = $this->signatureHeader($type, $resource, $exp);
+			$url .= sprintf("&ssig=%s&KID=%s&Expires=%d", urlencode($ssig), $KID, $exp);
 		}
 		
 		if($return_url){

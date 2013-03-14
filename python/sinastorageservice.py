@@ -21,6 +21,7 @@ except ImportError:
     import sha
     class Sha1:
         digest_size = 20
+        #NOTE sha.digest_size = digest_size ?
         def new( self, inp = '' ):
             return sha.sha( inp )
 
@@ -49,11 +50,13 @@ class S3( object ):
 
     HTTP_OK = 200
     HTTP_DELETE = 204
+    #NOTE u can use httplib.OK / httplib.NO_CONTENT
 
     CHUNK = 1024 * 1024
 
     EXTRAS = [ 'copy' ]
     QUERY_STRINGS = [ 'ip', 'foo' ]
+    #NOTE EXTRAS, QUERY_STRINGS never be used
 
     VERB2HTTPCODE = { 'DELETE' : HTTP_DELETE }
 
@@ -69,6 +72,8 @@ class S3( object ):
 
         #UNDO like '0000000000xxxxxxxxxx'
         self.nation = self.accesskey.split( '0' )[0].lower()
+
+        #NOTE not enough
         if self.nation == 'sae':
             self.accesskey = self.accesskey[ -10: ].lower()
         else:
@@ -81,7 +86,7 @@ class S3( object ):
 
 
     def purge( self ):
-
+        #NOTE I think reset_env is a better name than pruge
         self.domain = self.DEFAULT_DOMAIN
         self.up_domain = self.DEFAULT_UP_DOMAIN
 
@@ -110,9 +115,11 @@ class S3( object ):
 
 
     def set_attr( self, **kwargs ):
+    #NOTE set_attrs?
 
         for k in kwargs:
             fun = getattr( self, 'set_' + k )
+            #NOTE Error would be raised if set_xxx is not exist, instead of return None
 
             if fun is not None:
                 fun( kwargs[ k ] )
@@ -219,6 +226,7 @@ class S3( object ):
 
         r = re.compile( '<UploadId>(.{32})</UploadId>' )
         r = r.search( out )
+        #NOTE r.search( pattern, string ) is equal to yours
 
         if r:
             return True, r.groups()[0]
@@ -590,7 +598,7 @@ class S3( object ):
 
 
     def _signature( self, verb, key = None ):
-
+    #NOTE This function could be divided into several short funcs
         extra = self.extra
         extra += self.intra_query.pop( None, '' )
 

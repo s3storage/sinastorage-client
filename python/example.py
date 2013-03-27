@@ -28,11 +28,6 @@ def _set( h ):
 
     h.set_need_auth( True )
 
-    h.set_https(  ssl = True,
-                  port = 4443,
-                  timeout = 180,
-                  key_file = '/data0/S3monitor/pyclient/ssl/client.key',
-                  cert_file = '/data0/S3monitor/pyclient/ssl/client.crt' )
     return
 
     h.set_domain( 'sinastorage.com' )
@@ -53,13 +48,18 @@ def _set( h ):
     h.set_requst_header( {  'Content-Length' : '2013',
                             'Content-Type' : 'text/plain',
                             'Content-Disposition' : 'attachment; filename="ramanujan.txt"',
-                            }  )
+                            } )
+
+    h.set_query_specific( { 'formatter' : 'json',
+                            'fn' : 'rename.txt',
+                            'rd' : '404.html',
+                            } )
 
     h.set_https(  ssl = True,
                   port = 4443,
                   timeout = 180,
-                  key_file = '/data0/S3monitor/pyclient/ssl/client.key',
-                  cert_file = '/data0/S3monitor/pyclient/ssl/client.crt' )
+                  key_file = 'somewhere',
+                  cert_file = 'somewhere', )
 
     h.reset()
 
@@ -117,27 +117,27 @@ def test_get_file_meta( h ):
     print h.get_file_meta( key )
 
 
-def test_get_list( h ):
+def test_get_project_list( h ):
 
-    print h.get_list()
+    print h.get_project_list()
 
 
-def test_list_files( h ):
+def test_get_files_list( h ):
 
     prefix = 'rela'
     marker = 'relax'
     maxkeys = 5
     delimiter = ''
 
-    print h.list_files( prefix, marker, maxkeys, delimiter )
+    print h.get_files_list( prefix, marker, maxkeys, delimiter )
 
 
-def test_update_meta( h ):
+def test_update_file_meta( h ):
 
     key = 'relax_upload'
     meta = { 'Content-Disposition' : 'attachment; filename="painting.jpg"' }
 
-    print h.update_meta( key, meta.copy() )
+    print h.update_file_meta( key, meta.copy() )
 
 
 def test_delete_file( h ):
@@ -222,10 +222,10 @@ if __name__ == "__main__":
     #test_get_file_url( handle )
     #test_get_file_meta( handle )
 
-    #test_get_list( handle )
-    #test_list_files( handle )
+    #test_get_project_list( handle )
+    #test_get_files_list( handle )
 
-    #test_update_meta( handle )
+    #test_update_file_meta( handle )
 
     #test_delete_file( handle )
 

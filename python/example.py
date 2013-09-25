@@ -64,7 +64,7 @@ def _set( h ):
     h.reset()
 
 
-def test_uplaod_file( h ):
+def test_upload_file( h ):
 
     key = 'DONOT_README'
     fn = os.path.join( tempdir, 'DONOT_README' )
@@ -223,7 +223,7 @@ if __name__ == "__main__":
     _set( handle )
 
     #test_post_file( handle )
-    test_uplaod_file( handle )
+    test_upload_file( handle )
     #test_upload_file_relax( handle )
     #test_copy_file( handle )
 

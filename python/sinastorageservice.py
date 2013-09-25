@@ -88,7 +88,7 @@ class S3( object ):
                      'delimiter', 'marker', 'max-keys', 'prefix',
                      ]
 
-    QUERY_SIGNATURE_KEY = [ 'ip', 'uploadID', 'partNumber' ]
+    QUERY_SIGNATURE_KEY = [ 'ip', 'uploadId', 'partNumber' ]
 
     VERB2HTTPCODE = { 'DELETE' : httplib.NO_CONTENT }
 

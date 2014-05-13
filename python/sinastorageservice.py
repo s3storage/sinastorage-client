@@ -1,12 +1,8 @@
 import os
-import sys
-import stat
-import copy
 import time
 import json
 import types
 import datetime
-
 import re
 import hmac
 import base64
@@ -16,15 +12,15 @@ import httplib
 import mimetypes
 
 
-
 def ftype( f ):
     tp = mimetypes.guess_type( f )[ 0 ]
     return tp or 'application/octet-stream'
 
-
 def fsize( f ):
-    return os.path.getsize( f )
-
+    try:
+        return os.path.getsize( f )
+    except OSError, e:
+        raise
 
 def encode_multipart_formdata( fields, files ):
     """
@@ -32,7 +28,6 @@ def encode_multipart_formdata( fields, files ):
     files is a sequence of (name, filename, value) elements for data to be uploaded as files
     Return (content_type, body) ready for httplib.HTTP instance
     """
-
     BOUNDARY = '---------------------------this_boundary$'
     CRLF = '\r\n'
 
@@ -59,7 +54,6 @@ def encode_multipart_formdata( fields, files ):
     return content_type, body
 
 
-
 class S3Error( Exception ): pass
 
 class S3HTTPError( S3Error ): pass
@@ -69,17 +63,15 @@ class S3ResponseError( S3Error ): pass
 
 
 class S3( object ):
-
     """
     python SDK for Sina Storage Service
     SVN : svn checkout http://sinastorage-clients.googlecode.com/svn/trunk/ sinastorage-clients-read-only
     Original Docs: http://sinastorage.sinaapp.com/developer/interface/aws/operate_object.html
     """
 
+    CHUNK = 1024 * 1024
     DEFAULT_DOMAIN = 'sinastorage.com'
     DEFAULT_UP_DOMAIN = 'up.sinastorage.com'
-
-    CHUNK = 1024 * 1024
 
     EXTRAS = [ 'copy', ]
     QUERY_STRING = [ 'ip', 'foo', ]
@@ -100,18 +92,7 @@ class S3( object ):
         self.accesskey = accesskey or 'SYS0000000000SANDBOX'
         self.ACCESSKEY = accesskey or 'SYS0000000000SANDBOX'
 
-        if len( self.accesskey ) != len( 'SYS0000000000SANDBOX' ) \
-                or '0' not in self.accesskey:
-            raise S3Error, "accesskey '%s' is illegal." % \
-                    ( self.accesskey, )
-
-        self.nation = self.accesskey.split( '0' )[0].lower()
-        self.nation = 'sae' if self.nation == '' else self.nation
-
-        if self.nation == 'sae':
-            self.accesskey = self.accesskey[ -10: ].lower()
-        else:
-            self.accesskey = self.accesskey.split( '0' )[-1].lower()
+        self.nation, self.accesskey = parse_accesskey( self.accesskey )
 
         self.secretkey = secretkey or '1' * 40
         self.project = project or 'sandbox'
@@ -131,7 +112,7 @@ class S3( object ):
 
         self.extra = '?'
         self.query_string = {}
-        self.requst_header = {}
+        self.request_header = {}
         self.query_specific = {}
 
         self.is_ssl = False
@@ -214,9 +195,9 @@ class S3( object ):
             else:
                 self.query_specific[ k ] = d[ k ]
 
-    def set_requst_header( self, rh = None ):
+    def set_request_header( self, rh = None ):
 
-        self.requst_header.update( rh or {} )
+        self.request_header.update( rh or {} )
 
     def set_query_specific( self, qs = None ):
 
@@ -387,7 +368,7 @@ class S3( object ):
         except:
             raise
 
-        resp = self._mulitpart_post( uri,
+        resp = self._multipart_post( uri,
                                      fields = fd,
                                      files = [ ( 'file', fn, content ) ],
                                      headers = h )
@@ -512,7 +493,7 @@ class S3( object ):
         self.intra_query_specific[ 'prefix' ] = str( prefix or '' )
         self.intra_query_specific[ 'marker' ] = str( marker or '' )
         self.intra_query_specific[ 'max-keys' ] = str( maxkeys or 10 )
-        self.intra_query_specific[ 'delimiter' ] = str( delimiter or '' )
+        self.intra_query_specific[ 'delimiter' ] = str( delimiter or '/' )
 
         verb = 'GET'
         uri = self._get_uri( verb )
@@ -566,9 +547,9 @@ class S3( object ):
                 self.VERB2HTTPCODE.get( verb, httplib.OK ) )
 
         try:
-            resp = self._requst( verb, uri ) \
+            resp = self._request( verb, uri ) \
                     if infile is None \
-                    else self._requst_put_file( verb, uri, infile )
+                    else self._request_put_file( verb, uri, infile )
 
             if resp.status != code:
 
@@ -604,11 +585,11 @@ class S3( object ):
         return r
 
 
-    def _requst( self, verb, uri ):
+    def _request( self, verb, uri ):
 
         header = {}
         header.update( self.intra_header )
-        header.update( self.requst_header )
+        header.update( self.request_header )
 
         for k in header:
             if type( header[ k ] ) == types.UnicodeType:
@@ -636,11 +617,11 @@ class S3( object ):
             #                e = repr( e ), )
 
 
-    def _requst_put_file( self, verb, uri, fn ):
+    def _request_put_file( self, verb, uri, fn ):
 
         header = {}
         header.update( self.intra_header )
-        header.update( self.requst_header )
+        header.update( self.request_header )
 
         for k in header:
             if type( header[ k ] ) == types.UnicodeType:
@@ -733,16 +714,16 @@ class S3( object ):
 
         return qs + '&' if qs != '' else ''
 
-    def _generate_requst_header( self ):
+    def _generate_request_header( self ):
 
-        requst_header = {}
-        requst_header.update( self.intra_header )
-        requst_header.update( self.requst_header )
+        request_header = {}
+        request_header.update( self.intra_header )
+        request_header.update( self.request_header )
 
         rh = dict( [ ( k.lower(), v.encode( 'utf-8' ) ) \
                 if type( v ) == types.UnicodeType else \
                     ( k.lower(), str( v ) )
-                        for k, v in requst_header.items() ] )
+                        for k, v in request_header.items() ] )
 
         for t in ( 's-sina-sha1', 'content-sha1', \
                 's-sina-md5', 'content-md5' ):
@@ -781,7 +762,7 @@ class S3( object ):
 
         return qs + '&' if qs != '' else ''
 
-    def _fix_requst_header( self, verb = 'GET' ):
+    def _fix_request_header( self, verb = 'GET' ):
 
         fix_key = [ 's-sina-sha1',
                     'content-sha1',
@@ -789,7 +770,7 @@ class S3( object ):
                     'content-md5',
                     'content-type', ]
 
-        for d in [ self.intra_header, self.requst_header ]:
+        for d in [ self.intra_header, self.request_header ]:
             for k in d.keys():
                 kk = k.lower()
                 if kk in fix_key or \
@@ -832,7 +813,7 @@ class S3( object ):
 
             return uri.rstrip( '?&' )
 
-        rh = self._generate_requst_header()
+        rh = self._generate_request_header()
 
         hashinfo = rh.get( 'hash-info', '' )
         ct = rh.get( 'content-type', '' )
@@ -847,7 +828,7 @@ class S3( object ):
             ct = ''
             mts = []
 
-            self._fix_requst_header( verb )
+            self._fix_request_header( verb )
 
         dt = self._generate_expires()
 
@@ -904,7 +885,7 @@ class S3( object ):
         return policy, ssig
 
 
-    def _mulitpart_post( self, uri, fields = [], files = [], headers = None ):
+    def _multipart_post( self, uri, fields = [], files = [], headers = None ):
 
         content_type, body = encode_multipart_formdata( fields, files )
 
@@ -916,11 +897,27 @@ class S3( object ):
         conn.request( 'POST', uri, body, h )
 
         resp = conn.getresponse()
+
         return resp
 
+def parse_accesskey( acc ):
 
+    if len( acc ) != len( 'GRPS000000ANONYMOUSE' ):
+        raise S3Error, "accesskey '%s' is illegal." % ( acc, )
 
-if __name__ == '__main__':
+    nation = acc.split( '0' )[ 0 ].lower()
+    nation = 'sae' if nation == '' else nation
 
-    pass
+    if nation == 'sae':
+        uid = acc[ -10: ].lower()
+    else:
+        uid = acc[ -10: ].lower().lstrip( '0' )
 
+    return ( nation, uid )
+
+def escape( s ):
+    if type( s ) == type( u'' ):
+        s = s.encode( 'utf-8' )
+    else:
+        s = str( s )
+    return urllib.quote_plus( s )

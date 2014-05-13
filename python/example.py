@@ -9,6 +9,7 @@ __version__ = '0.1.0'
 
 import os
 import sys
+import time
 import logging
 
 import conf
@@ -41,13 +42,13 @@ def _set( h ):
 
     h.set_vhost( False )
 
-    h.set_query_string( {   'ip' : '1363392928,7.7.7.7',
+    h.set_query_string( {   'ip' : str( time.time().__int__() + 24 * 3600 ) + ',7.7.7.7',
                             'foo' : 'bar',
                             } )
 
-    h.set_requst_header( {  'Content-Length' : '2013',
-                            'Content-Type' : 'text/plain',
-                            'Content-Disposition' : 'attachment; filename="ramanujan.txt"',
+    h.set_request_header( {  'Content-Length' : '2013',
+                             'Content-Type' : 'text/plain',
+                             'Content-Disposition' : 'attachment; filename="ramanujan.txt"',
                             } )
 
     h.set_query_specific( { 'formatter' : 'json',
@@ -64,7 +65,7 @@ def _set( h ):
     h.reset()
 
 
-def test_upload_file( h ):
+def test_uplaod_file( h ):
 
     key = 'DONOT_README'
     fn = os.path.join( tempdir, 'DONOT_README' )
@@ -135,7 +136,7 @@ def test_get_files_list( h ):
     prefix = 'rela'
     marker = 'relax'
     maxkeys = 5
-    delimiter = ''
+    delimiter = '/'
 
     print h.get_files_list( prefix, marker, maxkeys, delimiter )
 
@@ -155,53 +156,33 @@ def test_delete_file( h ):
     print h.delete_file( key )
 
 
+def _upload( key, fn ):
+
+    handle = s3.S3( conf.accesskey, conf.secretkey, conf.project )
+    handle.set_need_auth()
+
+    try:
+        out = handle.upload_file( key, fn )
+        logging.info( "key='{key}' ok out='{out}'".format( key = key, out = out ) )
+    except Exception, e:
+        logging.error( "key='{key}' error out='{out}'".format( key = key, out = repr( e ) ) )
 
 def test_upload_dirall( dir ):
-
-    def listdir( dir ):
-
-        r = []
-        ff = os.listdir( dir )
-
-        ff = [ os.path.join( dir, f ) for f in ff ]
-
-        for f in ff:
-            if os.path.isfile( f ):
-                r += [ f ]
-            elif os.path.isdir( f ):
-                r += listdir( f )[ : ]
-            else:
-                pass
-
-        return r
-
-
-    def _upload( key, fn ):
-
-        handle = s3.S3( conf.accesskey, conf.secretkey, conf.project )
-        handle.set_need_auth()
-
-        try:
-            out = handle.upload_file( key, fn )
-            logging.info( "uplaod_file key='{key}' ok out='{out}'".format( key = key, out = out ) )
-        except Exception, e:
-            logging.error( "uplaod_file key='{key}' error out='{out}'".format( key = key, out = repr( e ) ) )
-
 
     import pool
 
     threadpool = pool.WorkerPool( 10 )
     upload = threadpool.runwithpool( _upload )
 
-
-    files = listdir( dir )
+    files = [ os.path.join( dirpath, name ) \
+                    for dirpath, dirnames, filenames in os.walk( dir ) \
+                        for name in filenames ]
     keys = [ key[ len( dir ) + 1: ] for key in files ]
 
     for key, fn in zip( keys, files ):
         upload( key, fn )
 
     threadpool.join()
-
 
 
 def test_uplaod_bigfile():
@@ -223,7 +204,7 @@ if __name__ == "__main__":
     _set( handle )
 
     #test_post_file( handle )
-    test_upload_file( handle )
+    test_uplaod_file( handle )
     #test_upload_file_relax( handle )
     #test_copy_file( handle )
 

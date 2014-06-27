@@ -308,20 +308,6 @@ class SinaStorageServiceTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(200,$httpCode);
     }
 
-    /**
-     * @covers SinaStorageService::listFiles
-     * @group listFiles
-     * @dataProvider listFilesData
-     */
-    public function testListFiles($marker, $pageeach, $prefix)
-    {
-        $result = $this->obj->listFiles($marker, $pageeach, $prefix);
-
-        $this->assertEquals($marker, $result["Marker"]);
-        $this->assertGreaterThan($marker, $result["Contents"][0]["Name"]);
-        $this->assertEquals($pageeach, $result["ContentsQuantity"]);
-    }
-
     public function listFilesData()
     {
         return array(

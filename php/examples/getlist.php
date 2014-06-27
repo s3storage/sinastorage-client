@@ -11,5 +11,6 @@ $o->setCURLOPTs(array(CURLOPT_VERBOSE=>1));
 $o->setAuth(true);
 //$o->setExtra("?formatter=xml");
 
-$rc = $o->getFileList($result);
-echo $result;
+$rc = $o->listProjectFiles('foo', 10, 'foo', $result);
+var_dump( $rc );
+var_dump( $result );

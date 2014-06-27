@@ -11,7 +11,8 @@ $o->setCURLOPTs(array(CURLOPT_VERBOSE=>1));
 //设置使用验证方式
 $o->setAuth(true);
 
-var_dump($o->getFile("foo/bar/1.html",$result));
-echo $result;
+
+var_dump($o->getFile("foo/bar/1",$result));
+var_dump( $result );
 
 // TODO add anonymmous access example

@@ -264,7 +264,7 @@ class SinaStorageService extends SinaService
 			CURLOPT_POSTFIELDS	=>	$file_content,
 			CURLOPT_HEADER		=>	1,
 		));
-		return $this->doCURL($url, "PUT", &$result);
+		return $this->doCURL($url, "PUT", $result);
 	}
 
 	/**
@@ -290,7 +290,7 @@ class SinaStorageService extends SinaService
 		$this->setCURLOPTs(array(
 			CURLOPT_HEADER		=>	1,
 		));
-		return $this->doCURL($url, "PUT", &$result);
+		return $this->doCURL($url, "PUT", $result);
 	}
 
 	/**
@@ -313,7 +313,7 @@ class SinaStorageService extends SinaService
 		$this->setCURLOPTs(array(
 			CURLOPT_HEADER		=>	1,
 		));
-		return $this->doCURL($url, "PUT", &$result);
+		return $this->doCURL($url, "PUT", $result);
 	}
 
 	/**
@@ -337,7 +337,7 @@ class SinaStorageService extends SinaService
 		$this->setCURLOPTs(array(
 				CURLOPT_HEADER		=>	1,
 		));
-		return $this->doCURL($url, "PUT", &$result);
+		return $this->doCURL($url, "PUT", $result);
 	}
 
 	/**
@@ -349,7 +349,7 @@ class SinaStorageService extends SinaService
 	 */
 	public function getFile($dest_name, &$result){
 		$url = self::$domain . $this->project . "/" . $dest_name;
-		return $this->doCURL($url, "GET", &$result);
+		return $this->doCURL($url, "GET", $result);
 	}
 
 	/**
@@ -376,7 +376,7 @@ class SinaStorageService extends SinaService
 	 */
 	public function deleteFile($dest_name, &$result = NULL){
 		$url = self::$domain . $this->project . "/" . $dest_name;
-		return $this->doCURL($url, "DELETE", &$result, self::HTTP_STATUS_NO_CONTENT);
+		return $this->doCURL($url, "DELETE", $result, self::HTTP_STATUS_NO_CONTENT);
 	}
 
 	/**
@@ -389,7 +389,7 @@ class SinaStorageService extends SinaService
 	public function getMeta($dest_name, &$result){
 		$url = self::$domain . $this->project . "/" . $dest_name;
 		$this->setExtra("?meta");
-		return $this->doCURL($url, "GET", &$result);
+		return $this->doCURL($url, "GET", $result);
 	}
 
 	/**
@@ -405,43 +405,7 @@ class SinaStorageService extends SinaService
 		if($this->extra == "?"){
 			$this->setExtra("?meta");
 		}
-		return $this->doCURL($url, "PUT", &$result);
-	}
-
-	/**
-	 * Get file list.
-	 *
-	 * @param string &$result  Retrieved data.
-	 * @return bool
-	 */
-	public function getFileList(&$result){
-		$url = self::$domain . $this->project . "/";
-		if($this->extra == "?"){
-			$this->setExtra("?formatter=json");
-		}
-		return $this->doCURL($url, "GET", &$result);
-	}
-
-	/**
-	 * List files
-	 * @param string $marker
-	 * @param int $pageeach
-	 * @param string $prefix
-	 * @return array
-	 */
-	public function listFiles($marker, $pageeach, $prefix=''){
-		$url = self::$domain . $this->project . "/";
-		$query_strings = array(
-			'formatter'	=> 'json',
-			'marker'	=> $marker,
-			'max-keys'	=> $pageeach,
-			'prefix'	=> $prefix,
-		);
-		$this->setQueryStrings($query_strings);
-		$res = $this->cURL($url, "GET");
-		if ($res[1]['http_code'] == self::HTTP_STATUS_OK){
-			return json_decode($res[0], true);
-		}
+		return $this->doCURL($url, "PUT", $result);
 	}
 
 	/**
@@ -461,7 +425,7 @@ class SinaStorageService extends SinaService
 			'prefix'	=> $prefix,
 		);
 		$this->setQueryStrings($query_strings);
-		return $this->doCURL($url, "GET", &$result);
+		return $this->doCURL($url, "GET", $result);
 	}
 
 
@@ -598,7 +562,7 @@ class SinaStorageService extends SinaService
 
 	protected function doCURL($url, $method, &$result = NULL, $httpCode = self::HTTP_STATUS_OK){
 		list($result, $this->result_info) = $this->cURL($url, $method);
-			return $this->result_info['http_code'] == $httpCode;
+		return $this->result_info['http_code'] == $httpCode;
 	}
 
 	/**
@@ -763,5 +727,5 @@ class SinaStorageService extends SinaService
 		return array($result,$result_info);
 	}
 }
-
+// vim: ts=4 st=4 sw=4
 ?>

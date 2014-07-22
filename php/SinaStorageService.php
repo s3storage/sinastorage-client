@@ -159,6 +159,7 @@ class SinaStorageService extends SinaService
 		self::$domain = self::UPDOMAIN;
 		$url = self::$domain . $this->project . "/" . $dest_name;
 		$this->setExtra("?uploads");
+		$this->request_headers['Content-Length'] = '0';
 		if($file_mimetype != NULL){
 			$this->request_headers['Content-Type'] = $file_mimetype;
 		}

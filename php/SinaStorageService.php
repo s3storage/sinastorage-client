@@ -107,6 +107,8 @@ class SinaStorageService extends SinaService
 		}
 		$this->access_key = $access_key ? $access_key : NULL ;
 		$this->secret_key = $secret_key ? $secret_key : NULL ;
+
+		$this->resp = NULL;
 	}
 
 	/**
@@ -676,6 +678,9 @@ class SinaStorageService extends SinaService
 	 * @return array
 	 */
 	protected function cURL($url, $type, $return_url = false){
+
+		$this->resp = NULL;
+
 		$headers = array();
 		$url .= $this->extra;
 
@@ -706,7 +711,7 @@ class SinaStorageService extends SinaService
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_URL, $url);
 		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $type);
-		curl_setopt($ch, CURLOPT_HEADER, 0);
+		curl_setopt($ch, CURLOPT_HEADER, 1);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($ch, CURLOPT_TIMEOUT, self::CURL_TIMEOUT);
 		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
@@ -722,11 +727,28 @@ class SinaStorageService extends SinaService
 		if($result === false){
 			throw new SinaServiceException("CURL error occurred:".curl_error($ch));
 		}
+		$this->resp = array(
+			"status" => $result_info[ "http_code" ],
+			"headers" => $this->parse_headers( $ch, $result ),
+		);
 		curl_close($ch);
 		$this->purgeReq();
 
 		return array($result,$result_info);
 	}
+	protected function parse_headers( $ch, $result ) {
+		$header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+		$header_str = substr($result, 0, $header_size);
+		$header_arr = explode( "\r\n", $header_str );
+		// remove "HTTP/1.1 200 ok", \r\n, \r\n
+		$header_arr = array_slice( $header_arr, 1, count( $header_arr ) - 3 );
+		$headers = array();
+		foreach ($header_arr as $hdr) {
+			$kv = explode( ":", $hdr, 2 );
+			$headers[ $kv[0] ] = trim( $kv[1], " " );
+		}
+		return $headers;
+	}
 }
-// vim: ts=4 st=4 sw=4
+// vim: ts=4 st=4 sw=4 noexpandtab
 ?>

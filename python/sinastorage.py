@@ -484,8 +484,12 @@ class S3( object ):
 
         d = { 'status' : resp.status,
               'reason' : resp.reason,
+              'headers': dict( resp.getheaders() ),
               'out' : resp.read() }
 
+        ssk = 'x-sina-serverside-key'
+        if ssk in d[ 'headers' ]:
+            d[ 'ssk' ] = d[ 'headers' ][ ssk ]
         return d
 
     def _requst( self, verb, uri, rh ):
@@ -750,4 +754,4 @@ def escape( s ):
         s = s.encode( 'utf-8' )
     else:
         s = str( s )
-    return urllib.quote_plus( s )
+    return urllib.quote_plus( s, '/' )

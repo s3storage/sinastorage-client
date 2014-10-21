@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+import urllib2
 import sinastorage
 
 project = 'sandbox2'
@@ -18,3 +19,10 @@ print rst
 # serverside key
 rst = cli.upload_data( 'ssk/', 'foo' )
 print rst[ 'ssk' ]
+
+k = rst[ 'ssk' ]
+k = urllib2.unquote( k )
+print k
+
+rst = cli.get_file( k )
+print rst

@@ -13,4 +13,5 @@ $o->setAuth(true);
 
 $rc = $o->listProjectFiles('foo', 10, 'foo', $result);
 var_dump( $rc );
+$result = json_decode( explode( "\r\n\r\n", $result, 2 )[1], true );
 var_dump( $result );

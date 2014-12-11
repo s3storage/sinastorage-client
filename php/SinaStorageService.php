@@ -411,6 +411,42 @@ class SinaStorageService extends SinaService
 		return $this->doCURL($url, "PUT", $result);
 	}
 
+	public function updateACL($dest_name, $acl, &$result = NULL){
+		$url = self::$domain . $this->project . "/" . $dest_name;
+
+		$body = json_encode( $acl );
+		$this->request_headers['Content-Length'] = strlen($body);
+		$this->request_headers['Content-Type'] = 'application/json';
+
+		if($this->extra == "?"){
+			$this->setExtra("?acl");
+		}
+		$query_string = array(
+			"formatter"	=> "json",
+		);
+		$this->setQueryStrings($query_string);
+
+		$this->setCURLOPTs(array(
+			CURLOPT_POSTFIELDS	=>	$body,
+			CURLOPT_HEADER		=>	1,
+		));
+
+		return $this->doCURL($url, "PUT", $result);
+	}
+
+	public function getACL($dest_name, &$result = NULL){
+		$url = self::$domain . $this->project . "/" . $dest_name;
+
+		if($this->extra == "?"){
+			$this->setExtra("?acl");
+		}
+		$query_string = array(
+			"formatter"	=> "json",
+		);
+		$this->setQueryStrings($query_string);
+		return $this->doCURL($url, "GET", $result);
+	}
+
 	/**
 	 * List files more verbosely, and return json format result
 	 * @param string $marker
